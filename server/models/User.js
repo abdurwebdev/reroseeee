@@ -1,0 +1,23 @@
+const mongoose = require('mongoose');
+
+const NotificationSchema = new mongoose.Schema({
+  videoId: { type: mongoose.Schema.Types.ObjectId, ref: 'FreeVideo' },
+  title: { type: String, required: true },
+  type: { type: String, required: true, enum: ['upload', 'like', 'comment', 'subscribe'] },
+  read: { type: Boolean, default: false },
+  createdAt: { type: Date, default: Date.now }
+});
+
+const UserSchema = new mongoose.Schema({
+  name: { type: String, required: true },
+  email: { type: String, required: true, unique: true },
+  password: { type: String, required: true },
+  role: { type: String, enum: ['admin', 'student', 'creator'], default: 'student' }, // Added 'creator' role
+  purchasedCourses: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Course' }],
+  profileImageUrl: { type: String }, // Optional profile image
+  subscriptions: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }], // Users this user is subscribed to
+  notifications: [NotificationSchema], // Array of notifications
+  lastNotificationSeen: { type: Date, default: Date.now } // Track when user last checked notifications
+});
+
+module.exports = mongoose.model('User', UserSchema);
