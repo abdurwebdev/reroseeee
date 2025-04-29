@@ -22,6 +22,7 @@ import AdminUserDashboard from "./pages/AdminUserDashboard";
 import AdminVideoDashboard from "./pages/AdminVideoDashboard";
 import GoLive from "./pages/GoLive";
 import WatchLivestream from "./pages/WatchLivestream";
+import ChannelPage from "./pages/ChannelPage"; // Channel page
 function App() {
   return (
     <BrowserRouter>
@@ -60,6 +61,7 @@ function App() {
         <Route path="/admindashboard/video-admin-dashboard" element={<AdminVideoDashboard />} />
         <Route path="/live-course" element={<GoLive />} />
         <Route path="/watch-livestream/:id" element={<WatchLivestream />} />
+        <Route path="/channel/:channelId" element={<ChannelPage />} />
       </Routes>
     </BrowserRouter>
   );

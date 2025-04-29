@@ -178,6 +178,13 @@ export default function Navbar() {
                   </div>
                 )}
                 <p className="text-center mb-2">{user.name}</p>
+                <Link
+                  to={`/channel/${user._id}`}
+                  onClick={closeMenu}
+                  className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded text-white transition mb-2"
+                >
+                  Your Channel
+                </Link>
                 <button
                   onClick={() => {
                     handleLogout();
@@ -289,7 +296,7 @@ export default function Navbar() {
                       Edit profile
                     </Link>
                     <Link
-                      to="/feed"
+                      to={`/channel/${user._id}`}
                       className="block p-3 hover:bg-gray-800"
                       onClick={() => setShowProfileMenu(false)}
                     >

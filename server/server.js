@@ -15,8 +15,9 @@ const freeVideoRoutes = require("./routes/freeVideoRoutes");
 const manageUserRoute = require("./routes/manageUser");
 // Routes for different features
 const notificationRoutes = require('./routes/notificationRoutes');
-const livestreamRoutes = require('./routes/livestreamRoutes');
+const livestreamRoutes = require('./routes/liveStreamRoutes');
 const subscriptionRoutes = require('./routes/subscriptionRoutes');
+const channelRoutes = require('./routes/channelRoutes');
 dotenv.config();
 connectDB();
 
@@ -48,6 +49,7 @@ app.use("/api/users", manageUserRoute);
 app.use("/api/livestream", livestreamRoutes);
 app.use("/api/subscriptions", subscriptionRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/channels', channelRoutes);
 // Protected route for testing auth middleware
 app.get(
   "/api/protected",

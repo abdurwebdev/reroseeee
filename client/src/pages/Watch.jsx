@@ -605,14 +605,14 @@ const Watch = () => {
 
               {/* Channel info and subscribe */}
               <div className="flex items-center justify-between mt-4 pb-4 border-b border-gray-800">
-                <div className="flex items-center">
+                <Link to={`/channel/${video.uploaderId}`} className="flex items-center">
                   <div className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center mr-3">
                     {video.uploader ? video.uploader.charAt(0).toUpperCase() : "U"}
                   </div>
                   <div>
                     <p className="font-semibold">{video.uploader}</p>
                   </div>
-                </div>
+                </Link>
 
                 <ChannelSubscribe
                   channelId={video.uploaderId}
@@ -975,7 +975,13 @@ const Watch = () => {
                     </div>
                     <div className="w-3/5 p-3">
                       <h4 className="font-medium line-clamp-2">{video.title}</h4>
-                      <p className="text-sm text-gray-400 mt-1">{video.uploader}</p>
+                      <Link
+                        to={`/channel/${video.uploaderId}`}
+                        className="text-sm text-gray-400 mt-1 hover:text-gray-300"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        {video.uploader}
+                      </Link>
                       <div className="flex items-center text-xs text-gray-500 mt-1">
                         <span>{video.views} views</span>
                         <span className="mx-1">•</span>
