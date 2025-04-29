@@ -2,10 +2,12 @@ import React, { useEffect, useState, useCallback } from "react";
 import axios from "axios";
 import { useParams, Link } from "react-router-dom";
 import Navbar from "../components/Navbar";
-import { 
-  FaSearch, FaShare, FaDownload, 
-  FaThumbsUp, FaThumbsDown, FaRegThumbsUp, 
-  FaRegThumbsDown, FaBell, FaReply, 
+import ChannelSubscribe from "../components/ChannelSubscribe";
+import { showSuccessToast, showErrorToast } from "../utils/toast";
+import {
+  FaSearch, FaShare, FaDownload,
+  FaThumbsUp, FaThumbsDown, FaRegThumbsUp,
+  FaRegThumbsDown, FaBell, FaReply,
   FaEllipsisV, FaTrash
 } from "react-icons/fa";
 
@@ -19,29 +21,27 @@ const Watch = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  
+
   // Comment state
   const [commentText, setCommentText] = useState("");
   const [replyText, setReplyText] = useState("");
   const [replyingTo, setReplyingTo] = useState(null);
   const [isCommenting, setIsCommenting] = useState(false);
   const [isReplying, setIsReplying] = useState(false);
-  
+
   // Search state
   const [isSearching, setIsSearching] = useState(false);
-  
+
   // Like/dislike states
   const [likeCount, setLikeCount] = useState(0);
   const [dislikeCount, setDislikeCount] = useState(0);
   const [hasLiked, setHasLiked] = useState(false);
   const [hasDisliked, setHasDisliked] = useState(false);
   const [isLikeLoading, setIsLikeLoading] = useState(false);
-  
-  // Subscribe states
-  const [isSubscribed, setIsSubscribed] = useState(false);
+
+  // Subscribe state
   const [subscriberCount, setSubscriberCount] = useState(0);
-  const [isSubscribeLoading, setIsSubscribeLoading] = useState(false);
-  
+
   // User state
   const [user, setUser] = useState(null);
 
@@ -54,12 +54,12 @@ const Watch = () => {
         if (storedUser) {
           setUser(JSON.parse(storedUser));
         }
-        
+
         // Then verify with server (if you have a verify endpoint)
         const res = await axios.get(`${API_URL}/api/users/profile`, {
           withCredentials: true,
         });
-        
+
         if (res.data) {
           setUser(res.data);
           localStorage.setItem("user", JSON.stringify(res.data));
@@ -78,12 +78,12 @@ const Watch = () => {
         // Fetch the main video
         const videoRes = await axios.get(`${API_URL}/api/free-videos/${id}`);
         setVideo(videoRes.data);
-        
+
         // Set like/dislike information
         if (videoRes.data) {
           setLikeCount(videoRes.data.likes?.length || 0);
           setDislikeCount(videoRes.data.dislikes?.length || 0);
-          
+
           // Check if current user has liked/disliked
           if (user && videoRes.data.likes && videoRes.data.dislikes) {
             setHasLiked(videoRes.data.likes.includes(user._id));
@@ -91,23 +91,14 @@ const Watch = () => {
           }
         }
 
-        // Fetch subscription status if user is logged in
-        if (user) {
+        // Fetch uploader info and subscriber count
+        if (videoRes.data.uploaderId) {
           try {
-            const subRes = await axios.get(
-              `${API_URL}/api/free-videos/${id}/subscription-status`,
-              { withCredentials: true }
-            );
-            setIsSubscribed(subRes.data.isSubscribed);
-            setSubscriberCount(subRes.data.subscriberCount);
-          } catch (err) {
-            console.error("Error fetching subscription status:", err);
-          }
-        } else {
-          // Fetch just the subscriber count if not logged in
-          try {
-            const subRes = await axios.get(`${API_URL}/api/free-videos/${id}/subscriber-count`);
-            setSubscriberCount(subRes.data.subscriberCount);
+            // Get subscriber count for this uploader
+            const subRes = await axios.get(`${API_URL}/api/subscriptions/count/${videoRes.data.uploaderId}`);
+            if (subRes.data.success) {
+              setSubscriberCount(subRes.data.subscriberCount);
+            }
           } catch (err) {
             console.error("Error fetching subscriber count:", err);
           }
@@ -118,41 +109,45 @@ const Watch = () => {
         const filteredVideos = feedRes.data.filter(v => v._id !== id).slice(0, 10);
         setSuggestedVideos(filteredVideos);
         setOriginalSuggestions(filteredVideos);
-        
+
         setLoading(false);
       } catch (err) {
         setError(err.response?.data?.error || "Failed to fetch video");
         setLoading(false);
       }
     };
-    
+
     fetchVideoAndSuggestions();
   }, [id, user]);
 
   // Handle like
   const handleLike = async () => {
     if (!user) {
-      alert("Please log in to like this video");
+      showErrorToast("Please log in to like this video");
       return;
     }
-    
+
     if (isLikeLoading) return;
     setIsLikeLoading(true);
-    
+
     try {
       const res = await axios.post(
         `${API_URL}/api/free-videos/${id}/like`,
         {},
         { withCredentials: true }
       );
-      
+
       setLikeCount(res.data.likes);
       setDislikeCount(res.data.dislikes);
       setHasLiked(res.data.hasLiked);
       setHasDisliked(res.data.hasDisliked);
+
+      if (res.data.hasLiked) {
+        showSuccessToast("Added to liked videos");
+      }
     } catch (err) {
       console.error("Error liking video:", err);
-      alert("Failed to like video. Please try again.");
+      showErrorToast("Failed to like video. Please try again.");
     } finally {
       setIsLikeLoading(false);
     }
@@ -161,56 +156,44 @@ const Watch = () => {
   // Handle dislike
   const handleDislike = async () => {
     if (!user) {
-      alert("Please log in to dislike this video");
+      showErrorToast("Please log in to dislike this video");
       return;
     }
-    
+
     if (isLikeLoading) return;
     setIsLikeLoading(true);
-    
+
     try {
       const res = await axios.post(
         `${API_URL}/api/free-videos/${id}/dislike`,
         {},
         { withCredentials: true }
       );
-      
+
       setLikeCount(res.data.likes);
       setDislikeCount(res.data.dislikes);
       setHasLiked(res.data.hasLiked);
       setHasDisliked(res.data.hasDisliked);
+
+      if (res.data.hasDisliked) {
+        showSuccessToast("Added to disliked videos");
+      }
     } catch (err) {
       console.error("Error disliking video:", err);
-      alert("Failed to dislike video. Please try again.");
+      showErrorToast("Failed to dislike video. Please try again.");
     } finally {
       setIsLikeLoading(false);
     }
   };
 
-  // Handle subscribe
-  const handleSubscribe = async () => {
-    if (!user) {
-      alert("Please log in to subscribe");
-      return;
-    }
-    
-    if (isSubscribeLoading) return;
-    setIsSubscribeLoading(true);
-    
+  // Fetch uploader info
+  const fetchUploaderInfo = async (videoId) => {
     try {
-      const res = await axios.post(
-        `${API_URL}/api/free-videos/${id}/subscribe`,
-        {},
-        { withCredentials: true }
-      );
-      
-      setIsSubscribed(res.data.isSubscribed);
-      setSubscriberCount(res.data.subscriberCount);
+      const res = await axios.get(`${API_URL}/api/free-videos/${videoId}/uploader`);
+      return res.data;
     } catch (err) {
-      console.error("Error subscribing:", err);
-      alert("Failed to subscribe. Please try again.");
-    } finally {
-      setIsSubscribeLoading(false);
+      console.error("Error fetching uploader info:", err);
+      return null;
     }
   };
 
@@ -221,19 +204,19 @@ const Watch = () => {
       setSuggestedVideos(originalSuggestions);
       return;
     }
-    
+
     setIsSearching(true);
     try {
       const res = await axios.get(`${API_URL}/api/free-videos/search`, {
         params: { q: searchQuery.trim() }
       });
-      
+
       const filteredVideos = res.data.filter(v => v._id !== id).slice(0, 10);
       setSuggestedVideos(filteredVideos);
     } catch (err) {
       console.error("Error searching videos:", err);
       // Fallback to client-side filtering
-      const filtered = originalSuggestions.filter(v => 
+      const filtered = originalSuggestions.filter(v =>
         v.title.toLowerCase().includes(searchQuery.toLowerCase())
       );
       setSuggestedVideos(filtered);
@@ -246,10 +229,10 @@ const Watch = () => {
   const handleShare = async () => {
     try {
       await navigator.clipboard.writeText(window.location.href);
-      alert("Video URL copied to clipboard!");
+      showSuccessToast("Video URL copied to clipboard!");
     } catch (err) {
       console.error("Error copying to clipboard:", err);
-      alert("Failed to copy URL. Please copy it manually.");
+      showErrorToast("Failed to copy URL. Please copy it manually.");
     }
   };
 
@@ -259,12 +242,12 @@ const Watch = () => {
       alert("Please log in to comment");
       return;
     }
-    
+
     if (!commentText.trim()) {
       alert("Please enter a comment");
       return;
     }
-    
+
     setIsCommenting(true);
     try {
       const res = await axios.post(
@@ -272,13 +255,13 @@ const Watch = () => {
         { text: commentText.trim() },
         { withCredentials: true }
       );
-      
+
       // Update video state with new comment
       setVideo(prev => ({
         ...prev,
         comments: [...(prev.comments || []), res.data]
       }));
-      
+
       setCommentText("");
     } catch (err) {
       console.error("Error adding comment:", err);
@@ -294,16 +277,16 @@ const Watch = () => {
       alert("Please log in to reply");
       return;
     }
-    
+
     if (!replyingTo) {
       return;
     }
-    
+
     if (!replyText.trim()) {
       alert("Please enter a reply");
       return;
     }
-    
+
     setIsReplying(true);
     try {
       const res = await axios.post(
@@ -311,7 +294,7 @@ const Watch = () => {
         { text: replyText.trim() },
         { withCredentials: true }
       );
-      
+
       // Update video state with new reply
       setVideo(prev => {
         const updatedComments = prev.comments.map(comment => {
@@ -323,13 +306,13 @@ const Watch = () => {
           }
           return comment;
         });
-        
+
         return {
           ...prev,
           comments: updatedComments
         };
       });
-      
+
       // Reset reply state
       setReplyText("");
       setReplyingTo(null);
@@ -347,14 +330,14 @@ const Watch = () => {
       alert("Please log in");
       return;
     }
-    
+
     try {
       const res = await axios.post(
         `${API_URL}/api/free-videos/${id}/comment/${commentId}/pin`,
         {},
         { withCredentials: true }
       );
-      
+
       // Update comment pin status
       setVideo(prev => {
         const updatedComments = prev.comments.map(comment => {
@@ -366,7 +349,7 @@ const Watch = () => {
           }
           return comment;
         });
-        
+
         return {
           ...prev,
           comments: updatedComments
@@ -388,14 +371,14 @@ const Watch = () => {
       alert("Please log in to react to comments");
       return;
     }
-    
+
     try {
       const res = await axios.post(
         `${API_URL}/api/free-videos/${id}/comment/${commentId}/react`,
         { type: reactionType },
         { withCredentials: true }
       );
-      
+
       // Update comment reactions
       setVideo(prev => {
         const updatedComments = prev.comments.map(comment => {
@@ -410,7 +393,7 @@ const Watch = () => {
           }
           return comment;
         });
-        
+
         return {
           ...prev,
           comments: updatedComments
@@ -428,14 +411,14 @@ const Watch = () => {
       alert("Please log in to react to replies");
       return;
     }
-    
+
     try {
       const res = await axios.post(
         `${API_URL}/api/free-videos/${id}/comment/${commentId}/reply/${replyId}/react`,
         { type: reactionType },
         { withCredentials: true }
       );
-      
+
       // Update reply reactions
       setVideo(prev => {
         const updatedComments = prev.comments.map(comment => {
@@ -452,7 +435,7 @@ const Watch = () => {
               }
               return reply;
             });
-            
+
             return {
               ...comment,
               replies: updatedReplies
@@ -460,7 +443,7 @@ const Watch = () => {
           }
           return comment;
         });
-        
+
         return {
           ...prev,
           comments: updatedComments
@@ -478,17 +461,17 @@ const Watch = () => {
       alert("Please log in");
       return;
     }
-    
+
     if (!window.confirm("Are you sure you want to delete this comment?")) {
       return;
     }
-    
+
     try {
       await axios.delete(
         `${API_URL}/api/free-videos/${id}/comment/${commentId}`,
         { withCredentials: true }
       );
-      
+
       // Remove comment from UI
       setVideo(prev => ({
         ...prev,
@@ -510,17 +493,17 @@ const Watch = () => {
       alert("Please log in");
       return;
     }
-    
+
     if (!window.confirm("Are you sure you want to delete this reply?")) {
       return;
     }
-    
+
     try {
       await axios.delete(
         `${API_URL}/api/free-videos/${id}/comment/${commentId}/reply/${replyId}`,
         { withCredentials: true }
       );
-      
+
       // Remove reply from UI
       setVideo(prev => {
         const updatedComments = prev.comments.map(comment => {
@@ -532,7 +515,7 @@ const Watch = () => {
           }
           return comment;
         });
-        
+
         return {
           ...prev,
           comments: updatedComments
@@ -551,7 +534,7 @@ const Watch = () => {
   // Format date helper function
   const formatDate = (dateString) => {
     if (!dateString) return "unknown time";
-    
+
     const date = new Date(dateString);
     const now = new Date();
     const diffMs = now - date;
@@ -561,7 +544,7 @@ const Watch = () => {
     const diffDay = Math.floor(diffHour / 24);
     const diffMonth = Math.floor(diffDay / 30);
     const diffYear = Math.floor(diffMonth / 12);
-    
+
     if (diffYear > 0) return `${diffYear} year${diffYear > 1 ? 's' : ''} ago`;
     if (diffMonth > 0) return `${diffMonth} month${diffMonth > 1 ? 's' : ''} ago`;
     if (diffDay > 0) return `${diffDay} day${diffDay > 1 ? 's' : ''} ago`;
@@ -571,12 +554,12 @@ const Watch = () => {
   };
 
   // Get sorted comments (pinned first, then by date)
-  const sortedComments = video?.comments ? 
+  const sortedComments = video?.comments ?
     [...video.comments].sort((a, b) => {
       // Pinned comments first
       if (a.pinned && !b.pinned) return -1;
       if (!a.pinned && b.pinned) return 1;
-      
+
       // Then sort by date (newest first)
       return new Date(b.createdAt) - new Date(a.createdAt);
     }) : [];
@@ -596,21 +579,21 @@ const Watch = () => {
   return (
     <div className="min-h-screen bg-black text-white">
       <Navbar />
-      
+
       <div className="container mx-auto px-4 py-6">
         <div className="flex flex-col lg:flex-row gap-6">
           {/* Main content */}
           <div className="lg:w-2/3 ">
             {/* Video player */}
             <div className="mb-4">
-              <video 
-                src={video.videoUrl} 
-                className="w-full h-96 rounded-lg" 
-                controls 
+              <video
+                src={video.videoUrl}
+                className="w-full h-96 rounded-lg"
+                controls
                 autoPlay
               />
             </div>
-            
+
             {/* Video info */}
             <div className="mb-6">
               <h1 className="text-2xl font-bold">{video.title}</h1>
@@ -619,7 +602,7 @@ const Watch = () => {
                 <span className="mx-2">•</span>
                 <span>{formatDate(video.createdAt)}</span>
               </div>
-              
+
               {/* Channel info and subscribe */}
               <div className="flex items-center justify-between mt-4 pb-4 border-b border-gray-800">
                 <div className="flex items-center">
@@ -628,27 +611,19 @@ const Watch = () => {
                   </div>
                   <div>
                     <p className="font-semibold">{video.uploader}</p>
-                    <p className="text-sm text-gray-400">{subscriberCount} subscribers</p>
                   </div>
                 </div>
-                
-                <button 
-                  onClick={handleSubscribe}
-                  disabled={isSubscribeLoading}
-                  className={`px-4 py-2 rounded-full font-medium ${
-                    isSubscribed 
-                      ? "bg-gray-600 hover:bg-gray-700" 
-                      : "bg-red-600 hover:bg-red-700"
-                  }`}
-                >
-                  {isSubscribed ? "Subscribed" : "Subscribe"}
-                </button>
+
+                <ChannelSubscribe
+                  channelId={video.uploaderId}
+                  channelName={video.uploader}
+                />
               </div>
-              
+
               {/* Actions */}
               <div className="flex items-center mt-4">
                 <div className="flex items-center space-x-4">
-                  <button 
+                  <button
                     onClick={handleLike}
                     className="flex items-center space-x-1"
                     disabled={isLikeLoading}
@@ -660,8 +635,8 @@ const Watch = () => {
                     )}
                     <span>{likeCount}</span>
                   </button>
-                  
-                  <button 
+
+                  <button
                     onClick={handleDislike}
                     className="flex items-center space-x-1"
                     disabled={isLikeLoading}
@@ -673,16 +648,16 @@ const Watch = () => {
                     )}
                     <span>{dislikeCount}</span>
                   </button>
-                  
-                  <button 
+
+                  <button
                     onClick={handleShare}
                     className="flex items-center space-x-1"
                   >
                     <FaShare />
                     <span>Share</span>
                   </button>
-                  
-                  <a 
+
+                  <a
                     href={video.videoUrl}
                     download
                     target="_blank"
@@ -695,13 +670,13 @@ const Watch = () => {
                 </div>
               </div>
             </div>
-            
+
             {/* Comments section */}
             <div className="mt-6">
               <h3 className="text-xl font-semibold mb-4">
                 {video.comments?.length || 0} Comments
               </h3>
-              
+
               {/* Add comment */}
               {user ? (
                 <div className="mb-6">
@@ -716,9 +691,9 @@ const Watch = () => {
                         placeholder="Add a comment..."
                         className="w-full p-3 bg-gray-800 rounded-lg min-h-[80px]"
                       ></textarea>
-                      
+
                       <div className="flex justify-end mt-2">
-                        <button 
+                        <button
                           onClick={() => setCommentText("")}
                           className="px-4 py-2 mr-2 text-gray-300"
                         >
@@ -727,9 +702,8 @@ const Watch = () => {
                         <button
                           onClick={handleAddComment}
                           disabled={isCommenting || !commentText.trim()}
-                          className={`px-4 py-2 bg-blue-600 rounded-lg ${
-                            isCommenting || !commentText.trim() ? "opacity-50 cursor-not-allowed" : "hover:bg-blue-700"
-                          }`}
+                          className={`px-4 py-2 bg-blue-600 rounded-lg ${isCommenting || !commentText.trim() ? "opacity-50 cursor-not-allowed" : "hover:bg-blue-700"
+                            }`}
                         >
                           {isCommenting ? "Adding..." : "Comment"}
                         </button>
@@ -744,70 +718,67 @@ const Watch = () => {
                   </p>
                 </div>
               )}
-              
+
               {/* Comments list */}
               <div className="space-y-6">
                 {sortedComments.length > 0 ? (
                   sortedComments.map((comment) => (
-                    <div 
-                      key={comment._id} 
+                    <div
+                      key={comment._id}
                       className={`border-l-4 ${comment.pinned ? 'border-blue-500' : 'border-transparent'} pl-3`}
                     >
                       <div className="flex gap-3">
-                        <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
-                          comment.isCreator ? 'bg-red-600' : 'bg-gray-600'
-                        }`}>
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${comment.isCreator ? 'bg-red-600' : 'bg-gray-600'
+                          }`}>
                           {comment.username ? comment.username.charAt(0).toUpperCase() : "U"}
                         </div>
-                        
+
                         <div className="flex-1">
                           <div className="flex items-center">
                             <span className="font-medium">{comment.username}</span>
-                            
+
                             {comment.isCreator && (
                               <span className="ml-2 text-xs bg-red-600 px-2 py-0.5 rounded-full">
                                 Creator
                               </span>
                             )}
-                            
+
                             {comment.pinned && (
                               <span className="ml-2 text-xs text-blue-400 flex items-center">
                                 <FaBell size={10} className="mr-1" /> Pinned
                               </span>
                             )}
-                            
+
                             <span className="ml-2 text-xs text-gray-400">
                               {formatDate(comment.createdAt)}
                             </span>
                           </div>
-                          
+
                           <p className="mt-1">{comment.text}</p>
-                          
+
                           {/* Comment actions */}
                           <div className="flex items-center mt-2 text-sm text-gray-400">
-                            <button 
+                            <button
                               onClick={() => handleCommentReaction(comment._id, 'like')}
-                              className={`flex items-center mr-3 ${
-                                comment.userReaction === 'like' ? 'text-blue-500' : ''
-                              }`}
+                              className={`flex items-center mr-3 ${comment.userReaction === 'like' ? 'text-blue-500' : ''
+                                }`}
                               disabled={!user}
                             >
                               <FaThumbsUp size={14} className="mr-1" />
                               <span>{comment.likesCount || 0}</span>
                             </button>
-                            
-                            <button 
+
+                            <button
                               onClick={() => handleCommentReaction(comment._id, 'dislike')}
-                              className={`flex items-center mr-3 ${
-                                comment.userReaction === 'dislike' ? 'text-blue-500' : ''
-                              }`}
+                              className={`flex items-center mr-3 ${comment.userReaction === 'dislike' ? 'text-blue-500' : ''
+                                }`}
                               disabled={!user}
                             >
                               <FaThumbsDown size={14} className="mr-1" />
                               <span>{comment.dislikesCount || 0}</span>
                             </button>
-                            
-                            <button 
+
+                            <button
                               onClick={() => setReplyingTo(comment)}
                               className="flex items-center mr-3"
                               disabled={!user}
@@ -815,25 +786,25 @@ const Watch = () => {
                               <FaReply size={14} className="mr-1" />
                               <span>Reply</span>
                             </button>
-                            
+
                             {/* Comment management buttons (pin/delete) */}
                             {user && (user._id === video.uploaderId || user._id === comment.userId) && (
                               <div className="ml-auto relative group">
                                 <button className="p-1">
                                   <FaEllipsisV size={14} />
                                 </button>
-                                
+
                                 <div className="hidden group-hover:block absolute right-0 mt-1 w-32 bg-gray-800 rounded-lg shadow-lg z-10">
                                   {user._id === video.uploaderId && (
-                                    <button 
+                                    <button
                                       onClick={() => handlePinComment(comment._id)}
                                       className="block w-full text-left p-2 hover:bg-gray-700"
                                     >
                                       {comment.pinned ? 'Unpin' : 'Pin comment'}
                                     </button>
                                   )}
-                                  
-                                  <button 
+
+                                  <button
                                     onClick={() => handleDeleteComment(comment._id)}
                                     className="block w-full text-left p-2 hover:bg-gray-700 text-red-400"
                                   >
@@ -843,7 +814,7 @@ const Watch = () => {
                               </div>
                             )}
                           </div>
-                          
+
                           {/* Reply form */}
                           {replyingTo && replyingTo._id === comment._id && (
                             <div className="mt-3 bg-gray-800 p-3 rounded-lg">
@@ -853,9 +824,9 @@ const Watch = () => {
                                 placeholder={`Replying to ${comment.username}...`}
                                 className="w-full p-2 bg-gray-700 rounded-lg"
                               ></textarea>
-                              
+
                               <div className="flex justify-end mt-2">
-                                <button 
+                                <button
                                   onClick={() => {
                                     setReplyingTo(null);
                                     setReplyText("");
@@ -867,81 +838,77 @@ const Watch = () => {
                                 <button
                                   onClick={handleAddReply}
                                   disabled={isReplying || !replyText.trim()}
-                                  className={`px-3 py-1 bg-blue-600 rounded-lg ${
-                                    isReplying || !replyText.trim() ? "opacity-50 cursor-not-allowed" : "hover:bg-blue-700"
-                                  }`}
+                                  className={`px-3 py-1 bg-blue-600 rounded-lg ${isReplying || !replyText.trim() ? "opacity-50 cursor-not-allowed" : "hover:bg-blue-700"
+                                    }`}
                                 >
                                   {isReplying ? "Replying..." : "Reply"}
                                 </button>
                               </div>
                             </div>
                           )}
-                          
+
                           {/* Replies */}
                           {comment.replies && comment.replies.length > 0 && (
                             <div className="ml-1 mt-3 pl-3 border-l border-gray-700 space-y-3">
                               {comment.replies.map((reply) => (
                                 <div key={reply._id} className="mt-2">
                                   <div className="flex gap-2">
-                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
-                                      reply.isCreator ? 'bg-red-600' : 'bg-gray-600'
-                                    }`}>
+                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${reply.isCreator ? 'bg-red-600' : 'bg-gray-600'
+                                      }`}>
                                       {reply.username ? reply.username.charAt(0).toUpperCase() : "U"}
                                     </div>
-                                    
+
                                     <div className="flex-1">
                                       <div className="flex items-center">
                                         <span className="font-medium text-sm">{reply.username}</span>
-                                        
+
                                         {reply.isCreator && (
                                           <span className="ml-2 text-xs bg-red-600 px-1.5 py-0.5 rounded-full">
                                             Creator
                                           </span>
                                         )}
-                                        
+
                                         <span className="ml-2 text-xs text-gray-400">
                                           {formatDate(reply.createdAt)}
                                         </span>
                                       </div>
-                                      
+
                                       <p className="mt-1 text-sm">{reply.text}</p>
-                                      
+
                                       {/* Reply actions */}
                                       <div className="flex items-center mt-1 text-xs text-gray-400">
-                                        <button 
+                                        <button
                                           onClick={() => handleReplyReaction(comment._id, reply._id, 'like')}
-                                          className={`flex items-center mr-3 ${
-                                            reply.userReaction === 'like' ? 'text-blue-500' : ''
-                                          }`}
+                                          className={`flex items-center mr-3 ${reply.userReaction === 'like' ? 'text-blue-500' : ''
+                                            }`}
                                           disabled={!user}
                                         >
                                           <FaThumbsUp size={12} className="mr-1" />
                                           <span>{reply.likesCount || 0}</span>
                                         </button>
-                                        
-                                        <button 
+
+                                        <button
                                           onClick={() => handleReplyReaction(comment._id, reply._id, 'dislike')}
-                                          className={`flex items-center mr-3 ${
-                                            reply.userReaction === 'dislike' ? 'text-blue-500' : ''
-                                          }`}
+                                          className={`flex items-center mr-3 ${reply.userReaction === 'dislike' ? 'text-blue-500' : ''
+                                            }`}
                                           disabled={!user}
                                         >
                                           <FaThumbsDown size={12} className="mr-1" />
                                           <span>{reply.dislikesCount || 0}</span>
                                         </button>
-                                        
+
                                         {user && (
-                                          user._id === video.uploaderId || 
-                                          user._id === comment.userId || 
+                                          user._id === video.uploaderId ||
+                                          user._id === comment.userId ||
                                           user._id === reply.userId
                                         ) && (
-                                          <button 
-                                            onClick={() => handleDeleteReply(comment._id, reply._id)}
-                                            className="ml-auto text-red-400"
-                                          >
-                                            <FaTrash size={12} />
-                                          </button>
-                                        )}
+                                            <button
+                                              onClick={() => handleDeleteReply(comment._id, reply._id)}
+                                              className="ml-auto text-red-400"
+                                            >
+                                              <FaTrash size={12} />
+                                            </button>
+                                          )}
                                       </div>
                                     </div>
                                   </div>
@@ -961,7 +928,7 @@ const Watch = () => {
               </div>
             </div>
           </div>
-          
+
           {/* Sidebar */}
           <div className="lg:w-1/3">
             {/* Search */}
@@ -974,7 +941,7 @@ const Watch = () => {
                   placeholder="Search videos..."
                   className="flex-1 p-2 bg-gray-800 rounded-l-lg"
                 />
-                <button 
+                <button
                   type="submit"
                   className="bg-gray-700 px-4 py-2 rounded-r-lg"
                   disabled={isSearching}
@@ -983,21 +950,21 @@ const Watch = () => {
                 </button>
               </form>
             </div>
-            
+
             {/* Suggested videos */}
             <h3 className="text-xl font-semibold mb-3">Recommended Videos</h3>
-            
+
             <div className="space-y-4">
               {suggestedVideos.length > 0 ? (
                 suggestedVideos.map((video) => (
-                  <Link 
-                    key={video._id} 
+                  <Link
+                    key={video._id}
                     to={`/watch/${video._id}`}
                     className="flex  rounded-lg overflow-hidden hover:bg-gray-800"
                   >
                     <div className="w-2/5">
-                      <img 
-                        src={video.thumbnailUrl} 
+                      <img
+                        src={video.thumbnailUrl}
                         alt={video.title}
                         className="w-full h-28 object-cover"
                         onError={(e) => {

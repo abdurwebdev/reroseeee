@@ -5,7 +5,10 @@ const NotificationSchema = new mongoose.Schema({
   title: { type: String, required: true },
   type: { type: String, required: true, enum: ['upload', 'like', 'comment', 'subscribe'] },
   read: { type: Boolean, default: false },
-  createdAt: { type: Date, default: Date.now }
+  createdAt: { type: Date, default: Date.now },
+  thumbnailUrl: { type: String }, // Video thumbnail URL
+  uploader: { type: String }, // Channel name
+  uploaderId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' } // Channel ID
 });
 
 const UserSchema = new mongoose.Schema({

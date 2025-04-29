@@ -4,6 +4,7 @@ import axios from "axios";
 import { Link } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
+import { showSuccessToast, showErrorToast, showWarningToast } from "../utils/toast";
 
 const UploadShort = () => {
   const [title, setTitle] = useState("");
@@ -29,6 +30,7 @@ const UploadShort = () => {
     // Validate form data
     if (!title || !videoFile || !thumbnailFile) {
       setError("Please fill out all fields.");
+      showWarningToast("Please fill out all fields.");
       return;
     }
 
@@ -43,13 +45,18 @@ const UploadShort = () => {
       await axios.post("http://localhost:5000/api/free-videos/upload-short", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
+
       setSuccess("Short uploaded successfully!");
+      showSuccessToast("Short uploaded successfully! It will appear in your feed shortly.");
+
       setError(null);
       setTitle("");
       setVideoFile(null);
       setThumbnailFile(null);
     } catch (err) {
-      setError("Error uploading short");
+      const errorMessage = err.response?.data?.message || "Error uploading short";
+      setError(errorMessage);
+      showErrorToast(errorMessage);
       setSuccess(null);
     }
   };

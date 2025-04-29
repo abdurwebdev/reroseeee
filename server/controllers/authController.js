@@ -134,6 +134,7 @@ const loginUser = async (req, res) => {
         email: user.email,
         role: user.role,
         profileImageUrl: user.profileImageUrl,
+        token: token, // Include the token in the response
       },
     });
   } catch (error) {

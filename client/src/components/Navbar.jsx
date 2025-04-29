@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import axios from "axios";
-import { FaBars, FaBell, FaYoutube, FaSearch, FaUser } from "react-icons/fa";
+import axiosInstance from "../utils/axiosConfig";
+import { FaBars, FaUser } from "react-icons/fa";
+import { showSuccessToast, showErrorToast, showInfoToast } from "../utils/toast";
+import NotificationButton from "./NotificationButton";
 
 export default function Navbar() {
   const [user, setUser] = useState(null);
@@ -10,17 +12,13 @@ export default function Navbar() {
   const [formData, setFormData] = useState({ name: "", phone: "", message: "" });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
-  
-  // Notification states
-  const [notifications, setNotifications] = useState([]);
-  const [unreadCount, setUnreadCount] = useState(0);
-  const [showNotifications, setShowNotifications] = useState(false);
+
+  // Profile menu state
   const [showProfileMenu, setShowProfileMenu] = useState(false);
-  
-  const notificationRef = useRef(null);
+
   const profileRef = useRef(null);
   const navigate = useNavigate();
-  
+
   const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
   useEffect(() => {
@@ -30,22 +28,19 @@ export default function Navbar() {
       try {
         // First check localStorage for faster initial load
         const storedUser = JSON.parse(localStorage.getItem("user"));
-        
+
         if (storedUser && storedUser.profileImageUrl) {
           // If we have a stored user with profile image, use it immediately
           if (isMounted) setUser(storedUser);
           setLoading(false);
         }
-        
+
         // Then verify with server and update if needed
-        const response = await axios.get(
-          `${API_URL}/api/auth/check`,
-          { withCredentials: true }
-        );
-        
+        const response = await axiosInstance.get('/api/auth/check');
+
         if (isMounted && response.data.user) {
           setUser(response.data.user);
-          
+
           // Update localStorage if needed
           if (JSON.stringify(response.data.user) !== JSON.stringify(storedUser)) {
             localStorage.setItem("user", JSON.stringify(response.data.user));
@@ -55,7 +50,7 @@ export default function Navbar() {
         // If server check fails but we have localStorage user, keep using that
         const storedUser = JSON.parse(localStorage.getItem("user"));
         if (!storedUser && isMounted) setUser(null);
-        
+
         console.error("Auth check error:", error);
       } finally {
         if (isMounted) setLoading(false);
@@ -67,95 +62,45 @@ export default function Navbar() {
       isMounted = false;
     };
   }, [API_URL]);
-  
-  // Fetch notifications when user is logged in
-  useEffect(() => {
-    const fetchNotifications = async () => {
-      if (!user) return;
-      
-      try {
-        // First try to fetch notifications from user API
-        const res = await axios.get(`${API_URL}/api/users/notifications`, {
-          withCredentials: true,
-        });
-        
-        if (res.data && res.data.notifications) {
-          setNotifications(res.data.notifications);
-          setUnreadCount(res.data.unreadCount);
-        } else {
-          // Fallback: Use recent videos as "new video" notifications
-          const videoRes = await axios.get(`${API_URL}/api/free-videos/feed`, {
-            withCredentials: true,
-          });
-          
-          // Get recent videos (last 7 days)
-          const sevenDaysAgo = new Date();
-          sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-          
-          const recentVideos = videoRes.data
-            .filter(video => new Date(video.createdAt) > sevenDaysAgo)
-            .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-            .slice(0, 5);
-          
-          setNotifications(recentVideos.map(video => ({
-            _id: video._id,
-            videoId: video._id,
-            title: video.title,
-            thumbnailUrl: video.thumbnailUrl,
-            uploader: video.uploader,
-            createdAt: video.createdAt,
-            type: 'upload',
-            read: false
-          })));
-          
-          // Use 24 hours for "unread" status
-          const oneDayAgo = new Date();
-          oneDayAgo.setDate(oneDayAgo.getDate() - 1);
-          
-          setUnreadCount(recentVideos.filter(
-            video => new Date(video.createdAt) > oneDayAgo
-          ).length);
-        }
-      } catch (err) {
-        console.error("Failed to fetch notifications", err);
-      }
-    };
-    
-    fetchNotifications();
-    
-    // Poll for new notifications every 5 minutes
-    const intervalId = setInterval(fetchNotifications, 5 * 60 * 1000);
-    
-    return () => clearInterval(intervalId);
-  }, [user, API_URL]);
 
-  // Close dropdown when clicking outside
+  // We're now using the NotificationButton component for notifications
+
+  // Close profile menu when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (notificationRef.current && !notificationRef.current.contains(event.target)) {
-        setShowNotifications(false);
-      }
       if (profileRef.current && !profileRef.current.contains(event.target)) {
         setShowProfileMenu(false);
       }
     };
-    
+
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   const handleLogout = async () => {
     try {
-      await axios.post(`${API_URL}/api/auth/logout`, {}, { withCredentials: true });
+      await axiosInstance.post('/api/auth/logout');
       // Clear user data from localStorage
       localStorage.removeItem("user");
+      // Reset notification initialization state
+      localStorage.removeItem("notificationsInitialized");
       setUser(null);
+
+      // Show success toast
+      showSuccessToast("You have been successfully logged out");
+
       navigate("/login");
     } catch (error) {
       console.error("Logout failed", error);
       // Still clear localStorage even if server request fails
       localStorage.removeItem("user");
+      // Reset notification initialization state
+      localStorage.removeItem("notificationsInitialized");
       setUser(null);
+
+      // Show info toast
+      showInfoToast("You have been logged out");
+
       navigate("/login");
     }
   };
@@ -168,52 +113,33 @@ export default function Navbar() {
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      await axios.post(`${API_URL}/api/student/request-callback`, formData);
-      alert("Your request has been submitted!");
+      await axiosInstance.post('/api/student/request-callback', formData);
+
+      // Show success toast
+      showSuccessToast("Your callback request has been submitted successfully!");
+
       setShowPopup(false);
       setFormData({ name: "", phone: "", message: "" });
     } catch (error) {
       console.error("Error submitting callback request:", error);
-      alert("Failed to submit request. Try again.");
+
+      // Show error toast
+      showErrorToast("Failed to submit request. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
   };
-  
-  const toggleNotifications = async () => {
-    setShowNotifications(!showNotifications);
-    
-    // Mark notifications as read when opened
-    if (!showNotifications && unreadCount > 0 && user) {
-      setUnreadCount(0);
-      
-      try {
-        await axios.post(
-          `${API_URL}/api/users/notifications/mark-read`, 
-          {}, 
-          { withCredentials: true }
-        );
-      } catch (err) {
-        console.error("Error marking notifications as read:", err);
-      }
-    }
-  };
-  
+
+  // We're now using the NotificationButton component for notifications
+
   const toggleProfileMenu = () => {
     setShowProfileMenu(!showProfileMenu);
   };
 
   const showMenu = () => setMenuOpen(true);
   const closeMenu = () => setMenuOpen(false);
-  
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { 
-      month: 'short', 
-      day: 'numeric',
-      year: 'numeric' 
-    });
-  };
+
+  // We're now using date-fns in the NotificationItem component
 
   return (
     <>
@@ -221,9 +147,8 @@ export default function Navbar() {
       <nav className="flex justify-between items-center bg-black text-white px-3 py-3 shadow-md">
         {/* Mobile Menu */}
         <div
-          className={`w-full h-screen bg-black fixed top-0 left-0 z-40 transition-transform duration-500 ${
-            menuOpen ? "translate-x-0" : "-translate-x-full"
-          }`}
+          className={`w-full h-screen bg-black fixed top-0 left-0 z-40 transition-transform duration-500 ${menuOpen ? "translate-x-0" : "-translate-x-full"
+            }`}
         >
           <div className="flex flex-col items-center justify-center h-full space-y-6 text-white text-xl relative">
             <button onClick={closeMenu} className="absolute top-5 right-5 text-3xl">✕</button>
@@ -286,7 +211,7 @@ export default function Navbar() {
 
         {/* Logo */}
         <div className="flex items-center gap-3">
-        <h1 className="text-xl">⚔️</h1>
+          <h1 className="text-xl">⚔️</h1>
           <Link to="/" className="text-lg font-semibold flex items-center">
             <span className="hidden sm:inline">Rerose</span> Academy
           </Link>
@@ -309,60 +234,11 @@ export default function Navbar() {
           ) : user ? (
             <>
               {/* Notifications */}
-              <div className="relative" ref={notificationRef}>
-                <button 
-                  onClick={toggleNotifications} 
-                  className="p-2 rounded-full hover:bg-gray-700 relative"
-                  aria-label="Notifications"
-                >
-                  <FaBell className="text-xl" />
-                  {unreadCount > 0 && (
-                    <span className="absolute top-0 right-0 bg-red-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                      {unreadCount}
-                    </span>
-                  )}
-                </button>
-                
-                {/* Notifications Dropdown */}
-                {showNotifications && (
-                  <div className="absolute right-0 mt-2 w-80 bg-[#212121] rounded-lg shadow-lg overflow-hidden z-50">
-                    <div className="p-3 border-b border-gray-700 font-medium">
-                      Notifications
-                    </div>
-                    <div className="max-h-96 overflow-y-auto">
-                      {notifications.length > 0 ? (
-                        notifications.map(notification => (
-                          <Link 
-                            to={`/watch/${notification.videoId}`} 
-                            key={notification._id}
-                            className="flex p-3 hover:bg-gray-800 border-b border-gray-700"
-                            onClick={() => setShowNotifications(false)}
-                          >
-                            <img 
-                              src={`${API_URL}${notification.thumbnailUrl}`} 
-                              alt={notification.title} 
-                              className="w-16 h-10 object-cover rounded"
-                              onError={(e) => e.target.src = "/default-thumbnail.jpg"}
-                            />
-                            <div className="ml-3">
-                              <p className="text-sm font-medium line-clamp-1">{notification.title}</p>
-                              <p className="text-xs text-gray-400">
-                                {notification.uploader || 'Unknown'} • {formatDate(notification.createdAt)}
-                              </p>
-                            </div>
-                          </Link>
-                        ))
-                      ) : (
-                        <p className="p-4 text-center text-gray-400">No new notifications</p>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
-              
+              <NotificationButton user={user} API_URL={API_URL} />
+
               {/* User Profile */}
               <div className="relative" ref={profileRef}>
-                <button 
+                <button
                   onClick={toggleProfileMenu}
                   className="flex items-center"
                   aria-label="User profile"
@@ -380,7 +256,7 @@ export default function Navbar() {
                     </div>
                   )}
                 </button>
-                
+
                 {/* Profile Dropdown */}
                 {showProfileMenu && (
                   <div className="absolute right-0 mt-2 w-64 bg-[#212121] rounded-lg shadow-lg overflow-hidden z-50">
@@ -405,21 +281,21 @@ export default function Navbar() {
                         </div>
                       </div>
                     </div>
-                    <Link 
-                      to="/profile-setup" 
+                    <Link
+                      to="/profile-setup"
                       className="block p-3 hover:bg-gray-800"
                       onClick={() => setShowProfileMenu(false)}
                     >
                       Edit profile
                     </Link>
-                    <Link 
-                      to="/feed" 
+                    <Link
+                      to="/feed"
                       className="block p-3 hover:bg-gray-800"
                       onClick={() => setShowProfileMenu(false)}
                     >
                       Your channel
                     </Link>
-                    <button 
+                    <button
                       onClick={handleLogout}
                       className="w-full text-left p-3 hover:bg-gray-800 text-red-500"
                     >
@@ -442,56 +318,7 @@ export default function Navbar() {
           {!loading && user && (
             <>
               {/* Mobile Notifications */}
-              <div className="relative" ref={notificationRef}>
-                <button 
-                  onClick={toggleNotifications} 
-                  className="p-2 relative"
-                  aria-label="Notifications"
-                >
-                  <FaBell className="text-xl" />
-                  {unreadCount > 0 && (
-                    <span className="absolute top-0 right-0 bg-red-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                      {unreadCount}
-                    </span>
-                  )}
-                </button>
-                
-                {/* Mobile Notifications Dropdown */}
-                {showNotifications && (
-                  <div className="absolute right-0 mt-2 w-72 bg-[#212121] rounded-lg shadow-lg overflow-hidden z-50">
-                    <div className="p-3 border-b border-gray-700 font-medium">
-                      Notifications
-                    </div>
-                    <div className="max-h-96 overflow-y-auto">
-                      {notifications.length > 0 ? (
-                        notifications.map(notification => (
-                          <Link 
-                            to={`/watch/${notification.videoId}`} 
-                            key={notification._id}
-                            className="flex p-3 hover:bg-gray-800 border-b border-gray-700"
-                            onClick={() => setShowNotifications(false)}
-                          >
-                            <img 
-                              src={`${API_URL}${notification.thumbnailUrl}`} 
-                              alt={notification.title} 
-                              className="w-16 h-10 object-cover rounded"
-                              onError={(e) => e.target.src = "/default-thumbnail.jpg"}
-                            />
-                            <div className="ml-3">
-                              <p className="text-sm font-medium line-clamp-1">{notification.title}</p>
-                              <p className="text-xs text-gray-400">
-                                {notification.uploader || 'Unknown'} • {formatDate(notification.createdAt)}
-                              </p>
-                            </div>
-                          </Link>
-                        ))
-                      ) : (
-                        <p className="p-4 text-center text-gray-400">No new notifications</p>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
+              <NotificationButton user={user} API_URL={API_URL} />
             </>
           )}
 
@@ -500,65 +327,67 @@ export default function Navbar() {
             <FaBars />
           </button>
         </div>
-      </nav>
+      </nav >
 
       {/* Callback Popup */}
-      {showPopup && (
-        <div className="fixed z-50 inset-0 bg-black bg-opacity-50 flex justify-center items-center">
-          <div className="bg-white text-black p-6 rounded-lg shadow-lg w-96">
-            <h2 className="text-xl font-semibold mb-4">Request a Callback</h2>
-            <form onSubmit={handleSubmit}>
-              <div className="mb-3">
-                <label className="block text-gray-700">Name</label>
-                <input
-                  type="text"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleChange}
-                  className="w-full border px-3 py-2 rounded"
-                  required
-                />
-              </div>
-              <div className="mb-3">
-                <label className="block text-gray-700">Phone</label>
-                <input
-                  type="text"
-                  name="phone"
-                  value={formData.phone}
-                  onChange={handleChange}
-                  className="w-full border px-3 py-2 rounded"
-                  required
-                />
-              </div>
-              <div className="mb-3">
-                <label className="block text-gray-700">Message (Optional)</label>
-                <textarea
-                  name="message"
-                  value={formData.message}
-                  onChange={handleChange}
-                  className="w-full border px-3 py-2 rounded"
-                />
-              </div>
-              <div className="flex justify-between">
-                <button
-                  type="button"
-                  className="bg-gray-500 text-white px-4 py-2 rounded"
-                  onClick={() => setShowPopup(false)}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded"
-                  disabled={isSubmitting}
-                >
-                  {isSubmitting ? "Submitting..." : "Submit"}
-                </button>
-              </div>
-            </form>
+      {
+        showPopup && (
+          <div className="fixed z-50 inset-0 bg-black bg-opacity-50 flex justify-center items-center">
+            <div className="bg-white text-black p-6 rounded-lg shadow-lg w-96">
+              <h2 className="text-xl font-semibold mb-4">Request a Callback</h2>
+              <form onSubmit={handleSubmit}>
+                <div className="mb-3">
+                  <label className="block text-gray-700">Name</label>
+                  <input
+                    type="text"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleChange}
+                    className="w-full border px-3 py-2 rounded"
+                    required
+                  />
+                </div>
+                <div className="mb-3">
+                  <label className="block text-gray-700">Phone</label>
+                  <input
+                    type="text"
+                    name="phone"
+                    value={formData.phone}
+                    onChange={handleChange}
+                    className="w-full border px-3 py-2 rounded"
+                    required
+                  />
+                </div>
+                <div className="mb-3">
+                  <label className="block text-gray-700">Message (Optional)</label>
+                  <textarea
+                    name="message"
+                    value={formData.message}
+                    onChange={handleChange}
+                    className="w-full border px-3 py-2 rounded"
+                  />
+                </div>
+                <div className="flex justify-between">
+                  <button
+                    type="button"
+                    className="bg-gray-500 text-white px-4 py-2 rounded"
+                    onClick={() => setShowPopup(false)}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded"
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? "Submitting..." : "Submit"}
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
-        </div>
-      )}
+        )
+      }
     </>
   );
 }

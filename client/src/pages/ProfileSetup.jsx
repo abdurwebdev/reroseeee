@@ -3,6 +3,7 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
+import { showSuccessToast, showErrorToast, showWarningToast } from "../utils/toast";
 
 const ProfileSetup = () => {
   const [name, setName] = useState("");
@@ -27,7 +28,7 @@ const ProfileSetup = () => {
     const file = e.target.files[0];
     if (file) {
       setProfileImage(file);
-      
+
       // Create preview
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -45,6 +46,7 @@ const ProfileSetup = () => {
 
     if (!name) {
       setError("Name is required");
+      showWarningToast("Name is required");
       setLoading(false);
       return;
     }
@@ -52,6 +54,7 @@ const ProfileSetup = () => {
     // At least require profile image for initial setup
     if (!profileImage && !imagePreview) {
       setError("Profile image is required");
+      showWarningToast("Profile image is required");
       setLoading(false);
       return;
     }
@@ -77,10 +80,11 @@ const ProfileSetup = () => {
       localStorage.setItem("user", JSON.stringify(updatedUser));
 
       setSuccess("Profile updated successfully!");
-      
+      showSuccessToast("Profile updated successfully! Redirecting to your dashboard...");
+
       // Determine where to redirect based on user role
       const userRole = updatedUser.role || "student";
-      
+
       setTimeout(() => {
         if (userRole === "admin") {
           navigate("/admindashboard");
@@ -90,9 +94,11 @@ const ProfileSetup = () => {
           navigate("/feed"); // Default for students
         }
       }, 1500);
-      
+
     } catch (err) {
-      setError(err.response?.data?.message || "Failed to update profile");
+      const errorMessage = err.response?.data?.message || "Failed to update profile";
+      setError(errorMessage);
+      showErrorToast(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -109,7 +115,7 @@ const ProfileSetup = () => {
           <h2 className="text-3xl font-bold mb-6 text-center">Setup Your Profile</h2>
           {error && <p className="text-red-400 mb-4 text-center">{error}</p>}
           {success && <p className="text-green-400 mb-4 text-center">{success}</p>}
-          
+
           {/* Profile Image Preview */}
           <div className="mb-6 flex justify-center">
             <div className="relative">
@@ -132,7 +138,7 @@ const ProfileSetup = () => {
               </label>
             </div>
           </div>
-          
+
           <div className="mb-4">
             <label className="block text-sm font-medium mb-1 text-gray-300">Name</label>
             <input
@@ -144,7 +150,7 @@ const ProfileSetup = () => {
               required
             />
           </div>
-          
+
           <div className="mb-4">
             <input
               id="profile-image-upload"
@@ -153,18 +159,17 @@ const ProfileSetup = () => {
               onChange={handleFileChange}
               className="hidden" // Hide the actual input
             />
-            <label 
+            <label
               htmlFor="profile-image-upload"
               className="w-full block text-center p-3 border border-dashed border-gray-500 bg-gray-800 rounded cursor-pointer hover:bg-gray-700 transition-colors"
             >
               {profileImage ? profileImage.name : "Select profile image"}
             </label>
           </div>
-          
-          <button 
-            className={`w-full bg-blue-600 hover:bg-blue-700 text-white p-3 rounded transition-all duration-300 ${
-              loading ? "opacity-70 cursor-not-allowed" : ""
-            }`}
+
+          <button
+            className={`w-full bg-blue-600 hover:bg-blue-700 text-white p-3 rounded transition-all duration-300 ${loading ? "opacity-70 cursor-not-allowed" : ""
+              }`}
             disabled={loading}
           >
             {loading ? "Saving..." : "Save Profile"}

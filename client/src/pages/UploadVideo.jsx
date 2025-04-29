@@ -4,6 +4,7 @@ import axios from "axios";
 import { Link } from "react-router-dom";
 import Footer from "../components/Footer";
 import Navbar from "../components/Navbar";
+import { showSuccessToast, showErrorToast, showWarningToast } from "../utils/toast";
 
 const UploadVideo = () => {
   const [title, setTitle] = useState("");
@@ -29,11 +30,13 @@ const UploadVideo = () => {
 
     if (!user) {
       setError("Please log in to upload a video.");
+      showWarningToast("Please log in to upload a video.");
       return;
     }
 
     if (!videoFile || !thumbnailFile || !title.trim()) {
       setError("Please fill in all required fields.");
+      showWarningToast("Please fill in all required fields.");
       return;
     }
 
@@ -55,12 +58,16 @@ const UploadVideo = () => {
       });
 
       setSuccess("🎉 Video uploaded successfully!");
+      showSuccessToast("Video uploaded successfully! It will appear in your feed shortly.");
+
       setTitle("");
       setVideoFile(null);
       setThumbnailFile(null);
     } catch (err) {
       console.error("Upload error:", err);
-      setError(err.response?.data?.message || "An error occurred during upload.");
+      const errorMessage = err.response?.data?.message || "An error occurred during upload.";
+      setError(errorMessage);
+      showErrorToast(errorMessage);
     } finally {
       setLoading(false);
     }

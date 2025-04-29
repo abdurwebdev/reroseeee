@@ -1,8 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const FreeVideo = require('../models/FreeVideo');
+const User = require('../models/User');
 const { protect } = require('../middleware/authMiddleware');
-const upload = require('../middleware/cloudinaryUpload'); 
+const upload = require('../middleware/cloudinaryUpload');
+const { sendUploadNotifications } = require('../utils/notificationHelper');
 
 // Get all videos (public feed)
 router.get('/feed', async (req, res) => {
@@ -19,7 +21,7 @@ router.get('/search', async (req, res) => {
   try {
     const { q } = req.query;
     if (!q) return res.status(400).json({ message: 'Query is required' });
-    
+
     const videos = await FreeVideo.find({
       title: { $regex: q, $options: 'i' }
     });
@@ -30,21 +32,28 @@ router.get('/search', async (req, res) => {
 });
 
 
-router.post('/upload-video', upload, async (req, res) => {
+router.post('/upload-video', protect, upload, async (req, res) => {
   try {
     const { title, uploader } = req.body;
     const videoFile = req.files.video[0];
     const thumbnailFile = req.files.thumbnail[0];
+    const uploaderId = req.user._id; // Get the uploader's ID from the authenticated user
 
     const video = new FreeVideo({
       title,
       videoUrl: videoFile.path,
       thumbnailUrl: thumbnailFile.path,
       uploader,
+      uploaderId, // Store the uploader's ID
       type: 'video',
     });
 
     await video.save();
+
+    // Send notifications to subscribers
+    const notificationCount = await sendUploadNotifications(uploaderId, video);
+    console.log(`Sent ${notificationCount} notifications for new video upload`);
+
     res.status(201).json(video);
   } catch (err) {
     console.error('Upload Video Error:', err);
@@ -53,21 +62,28 @@ router.post('/upload-video', upload, async (req, res) => {
 });
 
 // Upload a free short
-router.post('/upload-short', upload, async (req, res) => {
+router.post('/upload-short', protect, upload, async (req, res) => {
   try {
     const { title, uploader } = req.body;
     const videoFile = req.files.video[0];
     const thumbnailFile = req.files.thumbnail[0];
+    const uploaderId = req.user._id; // Get the uploader's ID from the authenticated user
 
     const video = new FreeVideo({
       title,
       videoUrl: videoFile.path,
       thumbnailUrl: thumbnailFile.path,
       uploader,
+      uploaderId, // Store the uploader's ID
       type: 'short',
     });
 
     await video.save();
+
+    // Send notifications to subscribers
+    const notificationCount = await sendUploadNotifications(uploaderId, video);
+    console.log(`Sent ${notificationCount} notifications for new short upload`);
+
     res.status(201).json(video);
   } catch (err) {
     console.error('Upload Short Error:', err);
@@ -81,7 +97,7 @@ router.post('/:id/like', protect, async (req, res) => {
     if (!video) return res.status(404).json({ error: 'Video not found' });
 
     const userId = req.user._id;
-    
+
     // Check if already liked
     const hasLiked = video.likes.some(id => id.equals(userId));
     const hasDisliked = video.dislikes.some(id => id.equals(userId));
@@ -92,7 +108,7 @@ router.post('/:id/like', protect, async (req, res) => {
     } else {
       // Add like and remove dislike if exists
       video.likes.push(userId);
-      
+
       if (hasDisliked) {
         video.dislikes = video.dislikes.filter(id => !id.equals(userId));
       }
@@ -118,7 +134,7 @@ router.post('/:id/dislike', protect, async (req, res) => {
     if (!video) return res.status(404).json({ error: 'Video not found' });
 
     const userId = req.user._id;
-    
+
     // Check if already disliked
     const hasLiked = video.likes.some(id => id.equals(userId));
     const hasDisliked = video.dislikes.some(id => id.equals(userId));
@@ -129,7 +145,7 @@ router.post('/:id/dislike', protect, async (req, res) => {
     } else {
       // Add dislike and remove like if exists
       video.dislikes.push(userId);
-      
+
       if (hasLiked) {
         video.likes = video.likes.filter(id => !id.equals(userId));
       }
@@ -148,69 +164,33 @@ router.post('/:id/dislike', protect, async (req, res) => {
   }
 });
 
-// Subscribe to a video's uploader
-router.post('/:id/subscribe', protect, async (req, res) => {
+// Get uploader info for a video
+router.get('/:id/uploader', async (req, res) => {
   try {
     const video = await FreeVideo.findById(req.params.id);
     if (!video) return res.status(404).json({ error: 'Video not found' });
 
-    const userId = req.user._id;
-    
-    // Check if already subscribed
-    const isSubscribed = video.subscriptions && video.subscriptions.some(id => id.equals(userId));
-    
-    if (isSubscribed) {
-      // Unsubscribe
-      video.subscriptions = video.subscriptions.filter(id => !id.equals(userId));
-    } else {
-      // Subscribe
-      if (!video.subscriptions) {
-        video.subscriptions = [];
-      }
-      video.subscriptions.push(userId);
+    if (!video.uploaderId) {
+      return res.json({
+        name: video.uploader,
+        profileImageUrl: null,
+        _id: null
+      });
     }
 
-    await video.save();
-    res.json({
-      isSubscribed: !isSubscribed,
-      subscriberCount: video.subscriptions.length
-    });
+    // Get uploader info
+    const uploader = await User.findById(video.uploaderId).select('name profileImageUrl');
+    if (!uploader) {
+      return res.json({
+        name: video.uploader,
+        profileImageUrl: null,
+        _id: video.uploaderId
+      });
+    }
+
+    res.json(uploader);
   } catch (error) {
-    console.error('Subscription error:', error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Get subscription status
-router.get('/:id/subscription-status', protect, async (req, res) => {
-  try {
-    const video = await FreeVideo.findById(req.params.id);
-    if (!video) return res.status(404).json({ error: 'Video not found' });
-
-    const userId = req.user._id;
-    const isSubscribed = video.subscriptions && video.subscriptions.some(id => id.equals(userId));
-
-    res.json({
-      isSubscribed,
-      subscriberCount: video.subscriptions ? video.subscriptions.length : 0
-    });
-  } catch (error) {
-    console.error('Subscription status error:', error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Get subscriber count (public route)
-router.get('/:id/subscriber-count', async (req, res) => {
-  try {
-    const video = await FreeVideo.findById(req.params.id);
-    if (!video) return res.status(404).json({ error: 'Video not found' });
-
-    res.json({
-      subscriberCount: video.subscriptions ? video.subscriptions.length : 0
-    });
-  } catch (error) {
-    console.error('Subscriber count error:', error);
+    console.error('Get uploader info error:', error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -245,7 +225,7 @@ router.post('/:id/comment', protect, async (req, res) => {
 
     // Find the newly added comment
     const addedComment = video.comments[video.comments.length - 1];
-    
+
     res.json(addedComment);
   } catch (error) {
     console.error('Comment error:', error);
@@ -287,7 +267,7 @@ router.post('/:id/comment/:commentId/reply', protect, async (req, res) => {
 
     // Find the newly added reply
     const addedReply = comment.replies[comment.replies.length - 1];
-    
+
     res.json(addedReply);
   } catch (error) {
     console.error('Reply error:', error);
@@ -352,7 +332,7 @@ router.post('/:id/comment/:commentId/react', protect, async (req, res) => {
     }
 
     const userId = req.user._id;
-    
+
     // Check if user already reacted
     const existingReactionIndex = comment.reactions.findIndex(
       r => r.userId.equals(userId)
@@ -360,7 +340,7 @@ router.post('/:id/comment/:commentId/react', protect, async (req, res) => {
 
     if (existingReactionIndex > -1) {
       const existingReaction = comment.reactions[existingReactionIndex];
-      
+
       if (existingReaction.type === type) {
         // Remove reaction if same type (toggle off)
         comment.reactions.splice(existingReactionIndex, 1);
@@ -381,7 +361,7 @@ router.post('/:id/comment/:commentId/react', protect, async (req, res) => {
     // Count reactions
     const likes = comment.reactions.filter(r => r.type === 'like').length;
     const dislikes = comment.reactions.filter(r => r.type === 'dislike').length;
-    
+
     // Get current user's reaction
     const userReaction = comment.reactions.find(r => r.userId.equals(userId));
 
@@ -420,7 +400,7 @@ router.post('/:id/comment/:commentId/reply/:replyId/react', protect, async (req,
     }
 
     const userId = req.user._id;
-    
+
     // Check if user already reacted
     const existingReactionIndex = reply.reactions.findIndex(
       r => r.userId.equals(userId)
@@ -428,7 +408,7 @@ router.post('/:id/comment/:commentId/reply/:replyId/react', protect, async (req,
 
     if (existingReactionIndex > -1) {
       const existingReaction = reply.reactions[existingReactionIndex];
-      
+
       if (existingReaction.type === type) {
         // Remove reaction if same type (toggle off)
         reply.reactions.splice(existingReactionIndex, 1);
@@ -449,7 +429,7 @@ router.post('/:id/comment/:commentId/reply/:replyId/react', protect, async (req,
     // Count reactions
     const likes = reply.reactions.filter(r => r.type === 'like').length;
     const dislikes = reply.reactions.filter(r => r.type === 'dislike').length;
-    
+
     // Get current user's reaction
     const userReaction = reply.reactions.find(r => r.userId.equals(userId));
 
@@ -482,7 +462,7 @@ router.delete('/:id/comment/:commentId', protect, async (req, res) => {
     const isAdmin = req.user.role === 'admin';
 
     if (!isCommentAuthor && !isVideoCreator && !isAdmin) {
-      return res.status(403).json({ 
+      return res.status(403).json({
         error: 'You are not authorized to delete this comment'
       });
     }
@@ -525,7 +505,7 @@ router.delete('/:id/comment/:commentId/reply/:replyId', protect, async (req, res
     const isAdmin = req.user.role === 'admin';
 
     if (!isReplyAuthor && !isCommentAuthor && !isVideoCreator && !isAdmin) {
-      return res.status(403).json({ 
+      return res.status(403).json({
         error: 'You are not authorized to delete this reply'
       });
     }
@@ -552,7 +532,7 @@ router.get('/:id', async (req, res) => {
     // Increment views
     video.views += 1;
     await video.save();
-    
+
     res.json(video);
   } catch (error) {
     console.error('Get video error:', error);
@@ -567,16 +547,16 @@ router.delete("/all", protect, async (req, res) => {
     if (req.user.role !== 'admin') {
       return res.status(403).json({ message: "Admin access required" });
     }
-    
+
     const result = await FreeVideo.deleteMany({});
-    
+
     if (result.deletedCount === 0) {
       return res.status(404).json({ message: "No videos found to delete" });
     }
-    
-    res.status(200).json({ 
-      message: "All videos deleted", 
-      deletedCount: result.deletedCount 
+
+    res.status(200).json({
+      message: "All videos deleted",
+      deletedCount: result.deletedCount
     });
   } catch (error) {
     console.error("Delete all error:", error);

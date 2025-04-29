@@ -12,15 +12,16 @@ const adminRoutes = require("./routes/admin");
 const studentRoutes = require("./routes/student");
 const reviewRouter = require("./routes/review");
 const freeVideoRoutes = require("./routes/freeVideoRoutes");
-const manageUserRoute = require("./routes/manageUser")
-// Add this to your app.js or index.js file
+const manageUserRoute = require("./routes/manageUser");
+// Routes for different features
 const notificationRoutes = require('./routes/notificationRoutes');
+const livestreamRoutes = require('./routes/livestreamRoutes');
+const subscriptionRoutes = require('./routes/subscriptionRoutes');
 dotenv.config();
 connectDB();
 
 const app = express();
 
-app.use('/api/notifications', notificationRoutes);
 // Middleware
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 app.use(express.json());
@@ -37,12 +38,16 @@ app.get("/", (req, res) => {
   res.send("API is running");
 });
 
+// API Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/student", studentRoutes);
 app.use("/api/reviews", reviewRouter);
-app.use("/api/free-videos",freeVideoRoutes);
-app.use("/api/users",manageUserRoute)
+app.use("/api/free-videos", freeVideoRoutes);
+app.use("/api/users", manageUserRoute);
+app.use("/api/livestream", livestreamRoutes);
+app.use("/api/subscriptions", subscriptionRoutes);
+app.use('/api/notifications', notificationRoutes);
 // Protected route for testing auth middleware
 app.get(
   "/api/protected",

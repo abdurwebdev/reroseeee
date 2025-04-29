@@ -3,8 +3,29 @@ const User = require("../models/User");
 
 // ✅ Middleware to Protect Routes (Authentication)
 const protect = async (req, res, next) => {
-  const token = req.cookies.token; // Get token from cookies
-  if (!token) return res.status(401).json({ message: "Unauthorized" });
+  let token;
+
+  // Check for token in cookies
+  if (req.cookies && req.cookies.token) {
+    token = req.cookies.token;
+  }
+
+  // If no token in cookies, check Authorization header
+  if (!token && req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+    token = req.headers.authorization.split(' ')[1];
+  }
+
+  // If still no token, check query parameter (for WebSocket connections)
+  if (!token && req.query && req.query.token) {
+    token = req.query.token;
+  }
+
+  // If no token found anywhere, return unauthorized
+  if (!token) {
+    return res.status(401).json({
+      message: "Authentication required. No token found in cookies, headers, or query parameters."
+    });
+  }
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
@@ -16,6 +37,7 @@ const protect = async (req, res, next) => {
 
     next();
   } catch (error) {
+    console.error("Auth middleware error:", error);
     res.status(403).json({ message: "Invalid Token" });
   }
 };
