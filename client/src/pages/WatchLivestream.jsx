@@ -21,13 +21,25 @@ const WatchLivestream = () => {
         const response = await axios.get(`http://localhost:5000/api/livestream/${id}`, {
           withCredentials: true
         });
-        
+
         if (response.data.success) {
           setLivestream(response.data.data);
+
+          // Record view for monetization if stream is active
+          if (response.data.data.status === 'active') {
+            try {
+              await axios.post(`http://localhost:5000/api/earnings/record-livestream-view`, {
+                livestreamId: id
+              });
+            } catch (err) {
+              console.error("Error recording monetized livestream view:", err);
+              // Don't show error to user as this is a background process
+            }
+          }
         } else {
           setError('Failed to load livestream');
         }
-        
+
         setLoading(false);
       } catch (err) {
         console.error('Error fetching livestream:', err);
@@ -40,7 +52,7 @@ const WatchLivestream = () => {
 
     // Set up polling to check for status updates
     const intervalId = setInterval(fetchLivestream, 30000); // Check every 30 seconds
-    
+
     return () => clearInterval(intervalId);
   }, [id]);
 
@@ -93,7 +105,7 @@ const WatchLivestream = () => {
             {livestream.endedAt ? 'RECORDED STREAM' : 'STREAM NOT STARTED'}
           </div>
         )}
-        
+
         {/* Video Player */}
         <div className="w-full bg-gray-900 aspect-video">
           {livestream.status === 'active' || livestream.endedAt ? (
@@ -104,21 +116,21 @@ const WatchLivestream = () => {
             </div>
           )}
         </div>
-        
+
         {/* Stream Info */}
         <div className="bg-[#111111] p-4 rounded-b-md mb-6">
           <h1 className="text-2xl font-bold">{livestream.name}</h1>
-          
+
           <div className="flex flex-wrap items-center gap-x-4 mt-2 text-sm text-gray-400">
             <span>
               Streamer: {livestream.user?.name || 'Anonymous'}
             </span>
             <span>•</span>
             <span>
-              {livestream.status === 'active' 
-                ? `Started ${formatDate(livestream.startedAt)}` 
-                : livestream.endedAt 
-                  ? `Ended ${formatDate(livestream.endedAt)}` 
+              {livestream.status === 'active'
+                ? `Started ${formatDate(livestream.startedAt)}`
+                : livestream.endedAt
+                  ? `Ended ${formatDate(livestream.endedAt)}`
                   : 'Not started yet'
               }
             </span>
@@ -127,11 +139,11 @@ const WatchLivestream = () => {
               {livestream.isScreenSharing ? 'Screen Sharing' : 'Video Stream'}
             </span>
           </div>
-          
+
           {user && user._id === livestream.user?._id && (
             <div className="mt-4">
-              <Link 
-                to="/live-course" 
+              <Link
+                to="/live-course"
                 className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md"
               >
                 Manage Stream
@@ -139,7 +151,7 @@ const WatchLivestream = () => {
             </div>
           )}
         </div>
-        
+
         {/* Related Streams */}
         <div className="mt-8">
           <h2 className="text-xl font-semibold mb-4">More Livestreams</h2>

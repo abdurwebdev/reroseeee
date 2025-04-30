@@ -18,6 +18,7 @@ const notificationRoutes = require('./routes/notificationRoutes');
 const livestreamRoutes = require('./routes/liveStreamRoutes');
 const subscriptionRoutes = require('./routes/subscriptionRoutes');
 const channelRoutes = require('./routes/channelRoutes');
+const earningsRoutes = require('./routes/earningsRoutes');
 dotenv.config();
 connectDB();
 
@@ -50,6 +51,7 @@ app.use("/api/livestream", livestreamRoutes);
 app.use("/api/subscriptions", subscriptionRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/channels', channelRoutes);
+app.use('/api/earnings', earningsRoutes);
 // Protected route for testing auth middleware
 app.get(
   "/api/protected",

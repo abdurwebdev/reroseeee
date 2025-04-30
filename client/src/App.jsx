@@ -20,6 +20,7 @@ import UploadShort from "./pages/UploadShort"; // New page for short uploads
 import ProfileSetup from "./pages/ProfileSetup";
 import AdminUserDashboard from "./pages/AdminUserDashboard";
 import AdminVideoDashboard from "./pages/AdminVideoDashboard";
+import AdminEarningsDashboard from "./pages/AdminEarningsDashboard"; // Admin earnings dashboard
 import GoLive from "./pages/GoLive";
 import WatchLivestream from "./pages/WatchLivestream";
 import ChannelPage from "./pages/ChannelPage"; // Channel page
@@ -59,6 +60,7 @@ function App() {
         <Route path="/profile-setup" element={<ProfileSetup />} />
         <Route path="/admindashboard/user-admin-dashboard" element={<AdminUserDashboard />} />
         <Route path="/admindashboard/video-admin-dashboard" element={<AdminVideoDashboard />} />
+        <Route path="/admindashboard/earnings-dashboard" element={<AdminEarningsDashboard />} />
         <Route path="/live-course" element={<GoLive />} />
         <Route path="/watch-livestream/:id" element={<WatchLivestream />} />
         <Route path="/channel/:channelId" element={<ChannelPage />} />

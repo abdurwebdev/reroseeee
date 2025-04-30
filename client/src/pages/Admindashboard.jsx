@@ -189,7 +189,7 @@ const Admindashboard = () => {
       }
     }
   };
-  
+
   const handleLogout = async () => {
     try {
       await axios.post("http://localhost:5000/api/auth/logout", {}, { withCredentials: true });
@@ -199,7 +199,7 @@ const Admindashboard = () => {
       alert("Failed to logout.");
     }
   };
-  
+
 
   if (loading) return <p>Loading...</p>;
 
@@ -208,24 +208,25 @@ const Admindashboard = () => {
       <Navbar />
       <div className="mx-auto p-6 bg-black shadow-lg">
         <h1 className="text-3xl font-bold mb-4 text-white">Admin Dashboard</h1>
-        <div className=" text-white mb-5 flex items-center justify-between">
+        <div className="text-white mb-5 flex items-center justify-between flex-wrap gap-2">
           <Link to='user-admin-dashboard' className="px-4 py-2 rounded-md bg-blue-500">Manage Users</Link>
           <Link to='video-admin-dashboard' className="px-4 py-2 rounded-md bg-blue-500">Manage Videos</Link>
+          <Link to='earnings-dashboard' className="px-4 py-2 rounded-md bg-green-500">Earnings Dashboard</Link>
         </div>
         {admin && (
-  <div className="bg-[#111111] text-white p-4 rounded shadow mb-4 flex justify-between items-center">
-    <div>
-      <h2 className="text-xl font-semibold">Admin: {admin.name}</h2>
-      <p>Email: {admin.email}</p>
-    </div>
-    <button
-      onClick={handleLogout}
-      className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md transition"
-    >
-      Logout
-    </button>
-  </div>
-)}
+          <div className="bg-[#111111] text-white p-4 rounded shadow mb-4 flex justify-between items-center">
+            <div>
+              <h2 className="text-xl font-semibold">Admin: {admin.name}</h2>
+              <p>Email: {admin.email}</p>
+            </div>
+            <button
+              onClick={handleLogout}
+              className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md transition"
+            >
+              Logout
+            </button>
+          </div>
+        )}
 
 
         {/* Course Creation / Edit Form */}

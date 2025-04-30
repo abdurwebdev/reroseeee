@@ -32,6 +32,9 @@ const Watch = () => {
   // Search state
   const [isSearching, setIsSearching] = useState(false);
 
+  // Uploader state
+  const [uploaderInfo, setUploaderInfo] = useState(null);
+
   // Like/dislike states
   const [likeCount, setLikeCount] = useState(0);
   const [dislikeCount, setDislikeCount] = useState(0);
@@ -89,6 +92,16 @@ const Watch = () => {
             setHasLiked(videoRes.data.likes.includes(user._id));
             setHasDisliked(videoRes.data.dislikes.includes(user._id));
           }
+
+          // Record view for monetization
+          try {
+            await axios.post(`${API_URL}/api/earnings/record-video-view`, {
+              videoId: id
+            });
+          } catch (err) {
+            console.error("Error recording monetized view:", err);
+            // Don't show error to user as this is a background process
+          }
         }
 
         // Fetch uploader info and subscriber count
@@ -99,8 +112,12 @@ const Watch = () => {
             if (subRes.data.success) {
               setSubscriberCount(subRes.data.subscriberCount);
             }
+
+            // Get uploader profile info
+            const uploaderRes = await axios.get(`${API_URL}/api/free-videos/${id}/uploader`);
+            setUploaderInfo(uploaderRes.data);
           } catch (err) {
-            console.error("Error fetching subscriber count:", err);
+            console.error("Error fetching uploader info:", err);
           }
         }
 
@@ -186,16 +203,7 @@ const Watch = () => {
     }
   };
 
-  // Fetch uploader info
-  const fetchUploaderInfo = async (videoId) => {
-    try {
-      const res = await axios.get(`${API_URL}/api/free-videos/${videoId}/uploader`);
-      return res.data;
-    } catch (err) {
-      console.error("Error fetching uploader info:", err);
-      return null;
-    }
-  };
+
 
   // Handle search
   const handleSearch = async (e) => {
@@ -606,9 +614,21 @@ const Watch = () => {
               {/* Channel info and subscribe */}
               <div className="flex items-center justify-between mt-4 pb-4 border-b border-gray-800">
                 <Link to={`/channel/${video.uploaderId}`} className="flex items-center">
-                  <div className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center mr-3">
-                    {video.uploader ? video.uploader.charAt(0).toUpperCase() : "U"}
-                  </div>
+                  {uploaderInfo && uploaderInfo.profileImageUrl ? (
+                    <img
+                      src={uploaderInfo.profileImageUrl.startsWith('http') ? uploaderInfo.profileImageUrl : `${API_URL}${uploaderInfo.profileImageUrl}`}
+                      alt={video.uploader}
+                      className="w-12 h-12 rounded-full object-cover mr-3"
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(video.uploader)}&background=random`;
+                      }}
+                    />
+                  ) : (
+                    <div className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center mr-3">
+                      {video.uploader ? video.uploader.charAt(0).toUpperCase() : "U"}
+                    </div>
+                  )}
                   <div>
                     <p className="font-semibold">{video.uploader}</p>
                   </div>
