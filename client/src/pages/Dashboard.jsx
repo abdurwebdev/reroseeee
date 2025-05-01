@@ -13,8 +13,13 @@ const Dashboard = () => {
         setUser(res.data.user);
 
         // Redirect based on role
-        if (res.data.user.role === "admin") navigate("/admindashboard");
-        else navigate("/studentdashboard");
+        if (res.data.user.role === "admin") {
+          navigate("/admindashboard");
+        } else if (res.data.user.role === "creator") {
+          navigate("/studio");
+        } else {
+          navigate("/studentdashboard");
+        }
       } catch (error) {
         navigate("/login");
       }

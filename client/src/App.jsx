@@ -24,6 +24,13 @@ import AdminEarningsDashboard from "./pages/AdminEarningsDashboard"; // Admin ea
 import GoLive from "./pages/GoLive";
 import WatchLivestream from "./pages/WatchLivestream";
 import ChannelPage from "./pages/ChannelPage"; // Channel page
+import CreatorStudio from "./pages/CreatorStudio"; // Creator Studio
+import StudioDashboard from "./components/studio/StudioDashboard";
+import StudioContent from "./components/studio/StudioContent";
+import StudioAnalytics from "./components/studio/StudioAnalytics";
+import StudioMonetization from "./components/studio/StudioMonetization";
+import StudioVerification from "./components/studio/StudioVerification";
+import StudioSettings from "./components/studio/StudioSettings";
 function App() {
   return (
     <BrowserRouter>
@@ -64,6 +71,16 @@ function App() {
         <Route path="/live-course" element={<GoLive />} />
         <Route path="/watch-livestream/:id" element={<WatchLivestream />} />
         <Route path="/channel/:channelId" element={<ChannelPage />} />
+
+        {/* Creator Studio Routes */}
+        <Route path="/studio" element={<CreatorStudio />}>
+          <Route index element={<StudioDashboard />} />
+          <Route path="content" element={<StudioContent />} />
+          <Route path="analytics" element={<StudioAnalytics />} />
+          <Route path="monetization" element={<StudioMonetization />} />
+          <Route path="verification" element={<StudioVerification />} />
+          <Route path="settings" element={<StudioSettings />} />
+        </Route>
       </Routes>
     </BrowserRouter>
   );

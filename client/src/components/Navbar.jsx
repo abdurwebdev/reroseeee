@@ -185,6 +185,15 @@ export default function Navbar() {
                 >
                   Your Channel
                 </Link>
+                {user.role === 'creator' && (
+                  <Link
+                    to="/studio"
+                    onClick={closeMenu}
+                    className="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded text-white transition mb-2"
+                  >
+                    Creator Studio
+                  </Link>
+                )}
                 <button
                   onClick={() => {
                     handleLogout();
@@ -302,6 +311,15 @@ export default function Navbar() {
                     >
                       Your channel
                     </Link>
+                    {user.role === 'creator' && (
+                      <Link
+                        to="/studio"
+                        className="block p-3 hover:bg-gray-800"
+                        onClick={() => setShowProfileMenu(false)}
+                      >
+                        Creator Studio
+                      </Link>
+                    )}
                     <button
                       onClick={handleLogout}
                       className="w-full text-left p-3 hover:bg-gray-800 text-red-500"
