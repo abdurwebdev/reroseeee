@@ -23,8 +23,25 @@ router.get('/search', async (req, res) => {
     if (!q) return res.status(400).json({ message: 'Query is required' });
 
     const videos = await FreeVideo.find({
-      title: { $regex: q, $options: 'i' }
+      $or: [
+        { title: { $regex: q, $options: 'i' } },
+        { uploader: { $regex: q, $options: 'i' } }
+      ]
     });
+    res.json(videos);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get trending videos
+router.get('/trending', async (req, res) => {
+  try {
+    // Get videos sorted by views (most viewed first)
+    const videos = await FreeVideo.find()
+      .sort({ views: -1 })
+      .limit(20);
+
     res.json(videos);
   } catch (error) {
     res.status(500).json({ error: error.message });

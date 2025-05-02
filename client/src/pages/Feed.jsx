@@ -1,9 +1,12 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import LivestreamList from "../components/LivestreamList";
+import FeedSidebar from "../components/FeedSidebar";
+import VoiceSearch from "../components/VoiceSearch";
+import { FaSearch, FaFire } from "react-icons/fa";
 
 const Feed = () => {
   const [videos, setVideos] = useState([]);
@@ -14,7 +17,11 @@ const Feed = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [user, setUser] = useState(null);
-  const [searchTerm, setSearchTerm] = useState(""); // 🆕 Search term
+  const [searchTerm, setSearchTerm] = useState(""); // Search term
+  const [subscriptions, setSubscriptions] = useState([]);
+  const [trendingVideos, setTrendingVideos] = useState([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const storedUser = JSON.parse(localStorage.getItem("user"));
@@ -25,15 +32,21 @@ const Feed = () => {
         const res = await axios.get("http://localhost:5000/api/free-videos/feed", {
           withCredentials: true,
         });
-        console.log(res.data); // Check what data is returned, especially the URL
         const allVideos = res.data;
         setVideos(allVideos.filter((video) => video.type === "video"));
         setShorts(allVideos.filter((video) => video.type === "short"));
+
+        // Set user videos if user is logged in
         if (storedUser) {
           setUserVideos(
             allVideos.filter((video) => video.uploader === storedUser.name)
           );
         }
+
+        // Create trending videos based on view count
+        const sortedByViews = [...allVideos].sort((a, b) => b.views - a.views).slice(0, 10);
+        setTrendingVideos(sortedByViews);
+
         setLoading(false);
       } catch (err) {
         setError("Failed to fetch videos");
@@ -56,129 +69,288 @@ const Feed = () => {
       }
     };
 
+    // Fetch user subscriptions if user is logged in
+    const fetchSubscriptions = async () => {
+      if (!storedUser) return;
+
+      try {
+        const res = await axios.get("http://localhost:5000/api/subscriptions/my-subscriptions", {
+          withCredentials: true,
+        });
+
+        if (res.data.success) {
+          setSubscriptions(res.data.subscriptions || []);
+        }
+      } catch (err) {
+        console.error("Failed to fetch subscriptions:", err);
+      }
+    };
+
     fetchVideos();
     fetchLivestreams();
+    fetchSubscriptions();
   }, []);
 
-  // 🧠 Filtering logic
-  const filterVideos = (list) =>
-    list.filter((video) =>
-      video.title.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+  // Advanced filtering logic with ranking
+  const filterVideos = (list) => {
+    if (!searchTerm.trim()) return list;
+
+    const query = searchTerm.toLowerCase();
+
+    return list
+      .filter(video => {
+        // Check if title or uploader contains the search term
+        const titleMatch = video.title.toLowerCase().includes(query);
+        const uploaderMatch = video.uploader.toLowerCase().includes(query);
+        return titleMatch || uploaderMatch;
+      })
+      .sort((a, b) => {
+        // Rank exact matches higher
+        const aExactMatch = a.title.toLowerCase() === query;
+        const bExactMatch = b.title.toLowerCase() === query;
+
+        if (aExactMatch && !bExactMatch) return -1;
+        if (!aExactMatch && bExactMatch) return 1;
+
+        // Then rank by view count
+        return b.views - a.views;
+      });
+  };
+
+  // Handle search submission
+  const handleSearch = (e) => {
+    e.preventDefault();
+    performSearch();
+  };
+
+  // Perform search
+  const performSearch = () => {
+    if (!searchTerm.trim()) return;
+
+    setIsSearching(true);
+
+    // If we want to implement server-side search in the future:
+    // axios.get(`http://localhost:5000/api/free-videos/search?q=${searchTerm}`)
+    //   .then(res => {
+    //     // Process results
+    //   })
+    //   .catch(err => console.error("Search error:", err))
+    //   .finally(() => setIsSearching(false));
+
+    // For now, we'll just use client-side filtering
+    setIsSearching(false);
+  };
+
+  // Handle voice search result
+  const handleVoiceSearchResult = (transcript) => {
+    setSearchTerm(transcript);
+    performSearch();
+  };
 
   if (loading) return <div className="text-center text-xl mt-10 text-gray-300">Loading...</div>;
   if (error) return <div className="text-center text-red-400 mt-10">{error}</div>;
 
   return (
-    <div className="min-h-screen bg-[#000000] text-white p-4">
+    <div className="min-h-screen bg-[#000000] text-white">
       <Navbar />
-      <div className="container mx-auto">
-        {user && (
-          <div className="flex items-center justify-center mb-6">
-            {user.profileImageUrl && (
-              <img
-                src={`http://localhost:5000${user.profileImageUrl}`}
-                alt="Profile"
-                className="w-12 h-12 rounded-full mr-4 object-cover"
-              />
-            )}
-            <h1 className="text-3xl font-bold text-gray-100">
-              Welcome, {user.name}!
-            </h1>
+
+      <div className="flex flex-col md:flex-row">
+        {/* Sidebar - hidden on mobile, shown on larger screens */}
+        <div className="hidden md:block md:w-64 lg:w-72 h-[calc(100vh-64px)] sticky top-16 overflow-y-auto">
+          <FeedSidebar user={user} subscriptions={subscriptions} />
+        </div>
+
+        {/* Main content */}
+        <div className="flex-1 p-4">
+          {/* Search bar with voice search */}
+          <div className="mb-6">
+            <form onSubmit={handleSearch} className="flex items-center gap-2 max-w-3xl mx-auto">
+              <div className="relative flex-1">
+                <input
+                  type="text"
+                  placeholder="Search videos..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full px-4 py-2 pl-10 rounded-full text-black bg-white outline-none border border-gray-300 focus:border-blue-500"
+                />
+                <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" />
+              </div>
+              <VoiceSearch onSearchResult={handleVoiceSearchResult} />
+              <button
+                type="submit"
+                className="bg-gray-800 hover:bg-gray-700 text-white px-4 py-2 rounded-full"
+                disabled={isSearching}
+              >
+                {isSearching ? "Searching..." : "Search"}
+              </button>
+            </form>
           </div>
-        )}
 
-        <h1 className="text-3xl font-bold mb-6 text-center">Free Video Feed</h1>
+          {/* Upload buttons */}
+          <div className="flex justify-center gap-4 mb-8">
+            <Link to="/upload-video" className="px-4 py-2 bg-[#111111] text-gray-200 rounded-lg hover:bg-gray-600 transition-colors">
+              Upload Video
+            </Link>
+            <Link to="/upload-short" className="px-4 py-2 bg-[#111111] text-gray-200 rounded-lg hover:bg-gray-600 transition-colors">
+              Upload Short
+            </Link>
+            <Link to="/live-course" className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
+              Go Live
+            </Link>
+          </div>
 
-        {/* 🆕 Search bar */}
-        <div className="flex justify-center mb-6">
-          <input
-            type="text"
-            placeholder="Search by title..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full max-w-lg px-4 py-2 rounded-lg text-black bg-white outline-none"
-          />
-        </div>
+          {/* Active Livestreams Section */}
+          {activeLivestreams.length > 0 && (
+            <LivestreamList
+              livestreams={activeLivestreams}
+              title="Live Now"
+              emptyMessage="No active livestreams at the moment."
+              linkTo="/watch-livestream"
+            />
+          )}
 
-        <div className="flex justify-center gap-4 mb-8">
-          <Link to="/upload-video" className="px-4 py-2 bg-[#111111] text-gray-200 rounded-lg hover:bg-gray-600 transition-colors">
-            Upload Video
-          </Link>
-          <Link to="/upload-short" className="px-4 py-2 bg-[#111111] text-gray-200 rounded-lg hover:bg-gray-600 transition-colors">
-            Upload Short
-          </Link>
-          <Link to="/live-course" className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
-            Go Live
-          </Link>
-        </div>
-
-        {/* Active Livestreams Section */}
-        {activeLivestreams.length > 0 && (
-          <LivestreamList
-            livestreams={activeLivestreams}
-            title="Live Now"
-            emptyMessage="No active livestreams at the moment."
-            linkTo="/watch-livestream"
-          />
-        )}
-
-        {user && filterVideos(userVideos).length > 0 && (
-          <>
-            <h2 className="text-2xl font-semibold mb-4 text-gray-100">Your Videos</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-              {filterVideos(userVideos).map((video) => (
-                <Link to={`/watch/${video._id}`} key={video._id} className="block rounded-lg overflow-hidden bg-[#111111] hover:bg-gray-700 transition-colors duration-200">
-                  <img src={video.thumbnailUrl} alt={video.title} className="w-full h-48 object-cover" />
-                  <div className="p-3">
-                    <h3 className="text-md font-semibold text-gray-100 truncate">{video.title}</h3>
-                    <p className="text-sm text-gray-400 mt-1">{video.uploader} • {video.views} views</p>
-                  </div>
-                </Link>
-
-
-              ))}
+          {/* Trending Videos Section */}
+          {trendingVideos.length > 0 && searchTerm.trim() === "" && (
+            <div className="mb-8">
+              <div className="flex items-center mb-4">
+                <FaFire className="text-red-500 mr-2" />
+                <h2 className="text-2xl font-semibold text-gray-100">Trending</h2>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                {trendingVideos.slice(0, 8).map((video) => (
+                  <Link to={`/watch/${video._id}`} key={video._id} className="block rounded-lg overflow-hidden bg-[#111111] hover:bg-gray-700 transition-colors duration-200">
+                    <img src={`${video.thumbnailUrl}`} alt={video.title} className="w-full h-48 object-cover" />
+                    <div className="p-3">
+                      <h3 className="text-md font-semibold text-gray-100 truncate">{video.title}</h3>
+                      <p className="text-sm text-gray-400 mt-1">{video.uploader} • {video.views} views</p>
+                    </div>
+                  </Link>
+                ))}
+              </div>
             </div>
-          </>
-        )}
+          )}
 
-        <h2 className="text-2xl font-semibold mb-4 text-gray-100">Videos</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-          {filterVideos(videos).map((video) => (
-            <Link to={`/watch/${video._id}`} key={video._id} className="block rounded-lg overflow-hidden bg-[#111111] hover:bg-gray-700 transition-colors duration-200">
-              <img src={`${video.thumbnailUrl}`} alt={video.title} className="w-full h-48 object-cover" />
-              <div className="p-3">
-                <h3 className="text-md font-semibold text-gray-100 truncate">{video.title}</h3>
-                <p className="text-sm text-gray-400 mt-1">{video.uploader} • {video.views} views</p>
+          {/* User's Videos Section */}
+          {user && filterVideos(userVideos).length > 0 && (
+            <div className="mb-8">
+              <h2 className="text-2xl font-semibold mb-4 text-gray-100">Your Videos</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                {filterVideos(userVideos).map((video) => (
+                  <Link to={`/watch/${video._id}`} key={video._id} className="block rounded-lg overflow-hidden bg-[#111111] hover:bg-gray-700 transition-colors duration-200">
+                    <img src={video.thumbnailUrl} alt={video.title} className="w-full h-48 object-cover" />
+                    <div className="p-3">
+                      <h3 className="text-md font-semibold text-gray-100 truncate">{video.title}</h3>
+                      <p className="text-sm text-gray-400 mt-1">{video.uploader} • {video.views} views</p>
+                    </div>
+                  </Link>
+                ))}
               </div>
-            </Link>
-          ))}
-        </div>
+            </div>
+          )}
 
-        <h2 className="text-2xl font-semibold mb-4 text-gray-100">Shorts</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-          {filterVideos(shorts).map((short) => (
-            <Link to={`/watch/${short._id}`} key={short._id} className="block rounded-lg overflow-hidden bg-[#111111] hover:bg-gray-700 transition-colors duration-200">
-              <img src={`http://localhost:5000${short.thumbnailUrl}`} alt={short.title} className="w-full h-48 object-cover" />
-              <div className="p-3">
-                <h3 className="text-md font-semibold text-gray-100 truncate">{short.title}</h3>
-                <p className="text-sm text-gray-400 mt-1">{short.uploader} • {short.views} views</p>
+          {/* Regular Videos Section */}
+          <div className="mb-8">
+            <h2 className="text-2xl font-semibold mb-4 text-gray-100">
+              {searchTerm ? `Search Results for "${searchTerm}"` : "Recommended Videos"}
+            </h2>
+            {filterVideos(videos).length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                {filterVideos(videos).map((video) => (
+                  <Link to={`/watch/${video._id}`} key={video._id} className="block rounded-lg overflow-hidden bg-[#111111] hover:bg-gray-700 transition-colors duration-200">
+                    <img src={`${video.thumbnailUrl}`} alt={video.title} className="w-full h-48 object-cover" />
+                    <div className="p-3">
+                      <h3 className="text-md font-semibold text-gray-100 truncate">{video.title}</h3>
+                      <p className="text-sm text-gray-400 mt-1">{video.uploader} • {video.views} views</p>
+                    </div>
+                  </Link>
+                ))}
               </div>
-            </Link>
-          ))}
-        </div>
+            ) : (
+              <div className="text-center py-8 bg-[#111111] rounded-lg">
+                <p className="text-gray-400">No videos found matching your search.</p>
+              </div>
+            )}
+          </div>
 
-        {/* Recent Ended Livestreams Section */}
-        {endedLivestreams.length > 0 && (
-          <LivestreamList
-            livestreams={endedLivestreams}
-            title="Recent Livestreams"
-            emptyMessage="No recent livestreams available."
-            linkTo="/watch-livestream"
-          />
-        )}
+          {/* Shorts Section */}
+          <div className="mb-8">
+            <h2 className="text-2xl font-semibold mb-4 text-gray-100">Shorts</h2>
+            {filterVideos(shorts).length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
+                {filterVideos(shorts).map((short) => (
+                  <Link to={`/watch/${short._id}`} key={short._id} className="block rounded-lg overflow-hidden bg-[#111111] hover:bg-gray-700 transition-colors duration-200">
+                    <div className="relative pb-[177%]"> {/* Vertical aspect ratio for shorts */}
+                      <img
+                        src={short.thumbnailUrl.startsWith('http') ? short.thumbnailUrl : `http://localhost:5000${short.thumbnailUrl}`}
+                        alt={short.title}
+                        className="absolute inset-0 w-full h-full object-cover"
+                      />
+                    </div>
+                    <div className="p-3">
+                      <h3 className="text-md font-semibold text-gray-100 truncate">{short.title}</h3>
+                      <p className="text-sm text-gray-400 mt-1">{short.views} views</p>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8 bg-[#111111] rounded-lg">
+                <p className="text-gray-400">No shorts found.</p>
+              </div>
+            )}
+          </div>
+
+          {/* Recent Ended Livestreams Section */}
+          {endedLivestreams.length > 0 && (
+            <LivestreamList
+              livestreams={endedLivestreams}
+              title="Recent Livestreams"
+              emptyMessage="No recent livestreams available."
+              linkTo="/watch-livestream"
+            />
+          )}
+
+          {/* Monetization Information */}
+          <div className="mt-12 p-6 bg-[#111111] rounded-lg">
+            <h2 className="text-xl font-semibold mb-4">Monetization Information</h2>
+            <p className="text-gray-300 mb-3">
+              The earnings generated through this platform represent real money. Creators can earn through:
+            </p>
+            <ul className="list-disc pl-6 text-gray-300 space-y-2">
+              <li>Video views (based on watch time)</li>
+              <li>Ad impressions and clicks</li>
+              <li>Livestream views and donations</li>
+            </ul>
+            <p className="text-gray-300 mt-3">
+              Payments are processed through JazzCash, Easypaisa, or PayFast for the Pakistani market.
+              Visit the Creator Studio for more details on monetization eligibility and earnings.
+            </p>
+          </div>
+
+          {/* Footer with YouTube-like links */}
+          <div className="mt-12 py-6 border-t border-gray-800">
+            <div className="flex flex-wrap gap-x-4 gap-y-2 text-sm text-gray-400">
+              <Link to="/about" className="hover:text-gray-200">About</Link>
+              <Link to="/press" className="hover:text-gray-200">Press</Link>
+              <Link to="/copyright" className="hover:text-gray-200">Copyright</Link>
+              <Link to="/contact" className="hover:text-gray-200">Contact us</Link>
+              <Link to="/creators" className="hover:text-gray-200">Creators</Link>
+              <Link to="/advertise" className="hover:text-gray-200">Advertise</Link>
+              <Link to="/developers" className="hover:text-gray-200">Developers</Link>
+            </div>
+            <div className="flex flex-wrap gap-x-4 gap-y-2 text-sm text-gray-400 mt-4">
+              <Link to="/terms" className="hover:text-gray-200">Terms</Link>
+              <Link to="/privacy" className="hover:text-gray-200">Privacy</Link>
+              <Link to="/policy" className="hover:text-gray-200">Policy & Safety</Link>
+              <Link to="/how-rerose-works" className="hover:text-gray-200">How Rerose works</Link>
+              <Link to="/test-features" className="hover:text-gray-200">Test new features</Link>
+            </div>
+            <div className="mt-4 text-sm text-gray-500">
+              © 2025 Rerose Academy
+            </div>
+          </div>
+        </div>
       </div>
-      <Footer />
     </div>
   );
 };

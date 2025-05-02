@@ -17,6 +17,13 @@ import Feed from "./pages/Feed";
 import Watch from "./pages/Watch";
 import UploadVideo from "./pages/UploadVideo"; // New page for video uploads
 import UploadShort from "./pages/UploadShort"; // New page for short uploads
+import History from "./pages/History"; // Watch history page
+import WatchLater from "./pages/WatchLater"; // Watch later page
+import LikedVideos from "./pages/LikedVideos"; // Liked videos page
+import Trending from "./pages/Trending"; // Trending videos page
+import Shorts from "./pages/Shorts"; // Shorts page
+import Subscriptions from "./pages/Subscriptions"; // Subscriptions page
+import YourVideos from "./pages/YourVideos"; // Your videos page
 import ProfileSetup from "./pages/ProfileSetup";
 import AdminUserDashboard from "./pages/AdminUserDashboard";
 import AdminVideoDashboard from "./pages/AdminVideoDashboard";
@@ -71,6 +78,13 @@ function App() {
         <Route path="/live-course" element={<GoLive />} />
         <Route path="/watch-livestream/:id" element={<WatchLivestream />} />
         <Route path="/channel/:channelId" element={<ChannelPage />} />
+        <Route path="/history" element={<History />} />
+        <Route path="/watch-later" element={<WatchLater />} />
+        <Route path="/liked-videos" element={<LikedVideos />} />
+        <Route path="/trending" element={<Trending />} />
+        <Route path="/shorts" element={<Shorts />} />
+        <Route path="/subscriptions" element={<Subscriptions />} />
+        <Route path="/your-videos" element={<YourVideos />} />
 
         {/* Creator Studio Routes */}
         <Route path="/studio" element={<CreatorStudio />}>

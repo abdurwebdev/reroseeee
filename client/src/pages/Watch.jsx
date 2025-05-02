@@ -8,7 +8,7 @@ import {
   FaSearch, FaShare, FaDownload,
   FaThumbsUp, FaThumbsDown, FaRegThumbsUp,
   FaRegThumbsDown, FaBell, FaReply,
-  FaEllipsisV, FaTrash
+  FaEllipsisV, FaTrash, FaClock
 } from "react-icons/fa";
 
 const API_URL = "http://localhost:5000"; // Change this to your API URL
@@ -45,6 +45,10 @@ const Watch = () => {
   // Subscribe state
   const [subscriberCount, setSubscriberCount] = useState(0);
 
+  // Watch later state
+  const [inWatchLater, setInWatchLater] = useState(false);
+  const [isWatchLaterLoading, setIsWatchLaterLoading] = useState(false);
+
   // User state
   const [user, setUser] = useState(null);
 
@@ -73,6 +77,57 @@ const Watch = () => {
     };
     checkAuthStatus();
   }, []);
+
+  // Video player reference for tracking watch time
+  const videoRef = React.useRef(null);
+  const [watchTime, setWatchTime] = useState(0);
+  const [watchTimeInterval, setWatchTimeInterval] = useState(null);
+
+  // Start tracking watch time when video plays
+  const handleVideoPlay = () => {
+    if (!user || !videoRef.current) return;
+
+    // Clear any existing interval
+    if (watchTimeInterval) {
+      clearInterval(watchTimeInterval);
+    }
+
+    // Set up interval to track watch time every 5 seconds
+    const interval = setInterval(() => {
+      if (videoRef.current && !videoRef.current.paused) {
+        setWatchTime(prev => prev + 5);
+      }
+    }, 5000);
+
+    setWatchTimeInterval(interval);
+  };
+
+  // Stop tracking watch time when video pauses
+  const handleVideoPause = () => {
+    if (watchTimeInterval) {
+      clearInterval(watchTimeInterval);
+      setWatchTimeInterval(null);
+    }
+  };
+
+  // Record watch history when component unmounts or video changes
+  useEffect(() => {
+    return () => {
+      // Clean up interval
+      if (watchTimeInterval) {
+        clearInterval(watchTimeInterval);
+      }
+
+      // Record watch history if user is logged in and has watched for at least 5 seconds
+      if (user && watchTime >= 5 && video) {
+        axios.post(`${API_URL}/api/library/history`, {
+          videoId: id,
+          watchTimeSeconds: watchTime
+        }, { withCredentials: true })
+          .catch(err => console.error("Error recording watch history:", err));
+      }
+    };
+  }, [id, user, watchTime, video, watchTimeInterval]);
 
   // Fetch video and suggested videos
   useEffect(() => {
@@ -243,6 +298,66 @@ const Watch = () => {
       showErrorToast("Failed to copy URL. Please copy it manually.");
     }
   };
+
+  // Handle watch later
+  const handleWatchLater = async () => {
+    if (!user) {
+      showErrorToast("Please log in to add to Watch Later");
+      return;
+    }
+
+    if (isWatchLaterLoading) return;
+    setIsWatchLaterLoading(true);
+
+    try {
+      if (inWatchLater) {
+        // Remove from watch later
+        await axios.delete(`${API_URL}/api/library/watch-later/${id}`, {
+          withCredentials: true
+        });
+        setInWatchLater(false);
+        showSuccessToast("Removed from Watch Later");
+      } else {
+        // Add to watch later
+        await axios.post(`${API_URL}/api/library/watch-later`, {
+          videoId: id
+        }, {
+          withCredentials: true
+        });
+        setInWatchLater(true);
+        showSuccessToast("Added to Watch Later");
+      }
+    } catch (err) {
+      console.error("Error updating Watch Later:", err);
+      showErrorToast("Failed to update Watch Later. Please try again.");
+    } finally {
+      setIsWatchLaterLoading(false);
+    }
+  };
+
+  // Check if video is in watch later
+  useEffect(() => {
+    const checkWatchLater = async () => {
+      if (!user || !id) return;
+
+      try {
+        const res = await axios.get(`${API_URL}/api/library/watch-later`, {
+          withCredentials: true
+        });
+
+        if (res.data.success) {
+          const isInWatchLater = res.data.watchLater.some(item =>
+            item.video && item.video._id === id
+          );
+          setInWatchLater(isInWatchLater);
+        }
+      } catch (err) {
+        console.error("Error checking watch later status:", err);
+      }
+    };
+
+    checkWatchLater();
+  }, [user, id]);
 
   // Add a comment
   const handleAddComment = async () => {
@@ -595,10 +710,13 @@ const Watch = () => {
             {/* Video player */}
             <div className="mb-4">
               <video
+                ref={videoRef}
                 src={video.videoUrl}
                 className="w-full h-96 rounded-lg"
                 controls
                 autoPlay
+                onPlay={handleVideoPlay}
+                onPause={handleVideoPause}
               />
             </div>
 
@@ -687,6 +805,15 @@ const Watch = () => {
                     <FaDownload />
                     <span>Download</span>
                   </a>
+
+                  <button
+                    onClick={handleWatchLater}
+                    className="flex items-center space-x-1"
+                    disabled={isWatchLaterLoading}
+                  >
+                    <FaClock className={inWatchLater ? "text-blue-500" : ""} />
+                    <span>{inWatchLater ? "Added to Watch Later" : "Watch Later"}</span>
+                  </button>
                 </div>
               </div>
             </div>
