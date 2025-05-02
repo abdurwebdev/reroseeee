@@ -1,8 +1,10 @@
 const express = require("express");
 const router = express.Router();
 const Course = require("../models/Course");
+const User = require("../models/User");
 const { protect } = require("../middleware/authMiddleware");
 const CallbackRequest = require("../models/CallbackRequest");
+const studentController = require("../controllers/studentController");
 // Like a video
 router.post("/courses/:courseId/videos/:videoIndex/like", protect, async (req, res) => {
   try {
@@ -124,6 +126,15 @@ router.post("/request-callback", async (req, res) => {
   }
 });
 
+
+// Get purchased courses
+router.get("/purchased-courses", protect, studentController.getPurchasedCourses);
+
+// Purchase a course
+router.post("/purchase-course/:courseId", protect, studentController.purchaseCourse);
+
+// Get course videos
+router.get("/course/:courseId", protect, studentController.getCourseVideos);
 
 module.exports = router;
 

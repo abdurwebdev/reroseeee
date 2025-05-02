@@ -54,14 +54,14 @@ export default function Home() {
                 <p className="text-gray-300">Duration: {course.duration}</p>
                 <p className="text-gray-300">Category: {course.category}</p>
                 <button
-  onClick={() => {
-    console.log("Navigating to course", course._id);  // Debugging
-    navigate(`/course/${course._id}`);
-  }}
-  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md mt-3 block w-full text-center"
->
-  Show Details
-</button>
+                  onClick={() => {
+                    console.log("Navigating to course", course._id);  // Debugging
+                    navigate(`/course/${course._id}`);
+                  }}
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md mt-3 block w-full text-center"
+                >
+                  Show Details
+                </button>
 
               </div>
             ))
@@ -70,7 +70,7 @@ export default function Home() {
           )}
         </div>
       )}
-      <Footer/>
+      <Footer />
     </div>
   );
 }

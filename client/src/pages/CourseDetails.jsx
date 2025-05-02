@@ -1,31 +1,60 @@
 import React, { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import Navbar from "../components/Navbar";
 import { Link } from "react-router-dom";
 import Footer from "../components/Footer";
+import { toast } from "react-toastify";
+import PaymentModal from "../components/PaymentModal";
 
 const CourseDetail = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [course, setCourse] = useState(null);
   const [loading, setLoading] = useState(true);
   const [reviews, setReviews] = useState([]); // Stores reviews (name + comment)
   const [nameInput, setNameInput] = useState(""); // Stores student name input
   const [reviewInput, setReviewInput] = useState(""); // Stores review comment input
+  const [showPaymentForm, setShowPaymentForm] = useState(false);
+  const [user, setUser] = useState(null);
+  const [hasPurchased, setHasPurchased] = useState(false);
 
   useEffect(() => {
     const fetchCourse = async () => {
       try {
-        const res = await axios.get(`http://localhost:5000/api/courses/${id}`);
+        const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+        const res = await axios.get(`${API_URL}/api/courses/${id}`);
         setCourse(res.data);
       } catch (error) {
         console.error("Error fetching course details:", error);
+        toast.error("Failed to load course details");
       } finally {
         setLoading(false);
       }
     };
 
+    const checkUserStatus = async () => {
+      try {
+        const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+        const res = await axios.get(`${API_URL}/api/auth/check`, { withCredentials: true });
+        setUser(res.data.user);
+
+        // Check if user has purchased this course
+        if (res.data.user) {
+          const purchasedRes = await axios.get(`${API_URL}/api/student/purchased-courses`, {
+            withCredentials: true
+          });
+
+          const purchased = purchasedRes.data.some(course => course._id === id);
+          setHasPurchased(purchased);
+        }
+      } catch (error) {
+        console.log("User not logged in or error checking status");
+      }
+    };
+
     fetchCourse();
+    checkUserStatus();
   }, [id]);
 
   const handleReviewSubmit = async () => {
@@ -57,7 +86,8 @@ const CourseDetail = () => {
   useEffect(() => {
     const fetchReviews = async () => {
       try {
-        const res = await axios.get(`http://localhost:5000/api/reviews/${id}`);
+        const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+        const res = await axios.get(`${API_URL}/api/reviews/${id}`);
         setReviews(res.data);
       } catch (error) {
         console.error("Error fetching reviews:", error);
@@ -67,11 +97,38 @@ const CourseDetail = () => {
     fetchReviews();
   }, [id]);
 
+  const handleBuyNow = () => {
+    console.log("Buy Now button clicked");
+    console.log("User:", user);
+    console.log("Has Purchased:", hasPurchased);
+
+    if (!user) {
+      toast.error("Please login to purchase this course");
+      navigate("/login");
+      return;
+    }
+
+    if (hasPurchased) {
+      navigate(`/course-videos/${id}`);
+      return;
+    }
+
+    console.log("Setting showPaymentForm to true");
+    setShowPaymentForm(true);
+  };
+
   if (loading) return <p className="text-white text-center mt-10">Loading...</p>;
 
   return (
     <div className="bg-black text-white min-h-screen">
       <Navbar />
+
+      {/* Payment Modal */}
+      <PaymentModal
+        isOpen={showPaymentForm}
+        onClose={() => setShowPaymentForm(false)}
+        course={course}
+      />
 
       <div className="max-w-6xl mx-auto py-10 px-5 flex flex-col lg:flex-row items-start gap-10">
         {/* Left Section */}
@@ -100,15 +157,58 @@ const CourseDetail = () => {
           </div>
 
           {/* Buy Now Button */}
-          <button className="mt-10 bg-green-500 text-black text-lg font-semibold px-6 py-3 rounded-lg hover:bg-green-400 transition">
-            Buy Now
-          </button>
+          <div className="mt-10 flex gap-4">
+            <button
+              onClick={handleBuyNow}
+              className="bg-green-500 text-black text-lg font-semibold px-6 py-3 rounded-lg hover:bg-green-400 transition"
+            >
+              {hasPurchased ? "Go to Course" : "Buy Now"}
+            </button>
+
+            {/* Test button for direct purchase */}
+            {!hasPurchased && (
+              <button
+                onClick={() => {
+                  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+
+                  // Direct purchase without payment modal
+                  if (user) {
+                    toast.info("Processing direct purchase...");
+
+                    axios.post(
+                      `${API_URL}/api/student/purchase-course/${course._id}`,
+                      {},
+                      { withCredentials: true }
+                    )
+                      .then(() => {
+                        toast.success("Course purchased successfully!");
+                        navigate(`/course-videos/${course._id}`);
+                      })
+                      .catch(error => {
+                        console.error("Error:", error);
+                        toast.error("Purchase failed. Please try again.");
+                      });
+                  } else {
+                    toast.error("Please login to purchase this course");
+                    navigate("/login");
+                  }
+                }}
+                className="bg-blue-500 text-white text-lg font-semibold px-6 py-3 rounded-lg hover:bg-blue-400 transition"
+              >
+                Quick Purchase (Test)
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Right Section (Dynamic Thumbnail + Hardcoded Info) */}
         <div className="lg:w-1/3 w-[97%]">
           <div className="relative z-[1]">
-            <img src={`http://localhost:5000${course?.image}`} alt={course?.title} />
+            <img
+              src={course?.image?.startsWith('http') ? course?.image : `http://localhost:5000${course?.image}`}
+              alt={course?.title}
+              className="w-full h-auto rounded-lg"
+            />
             <div className="absolute top-2 right-2 bg-black px-3 py-1 rounded-md text-sm">PLACEMENT</div>
           </div>
 
@@ -186,9 +286,48 @@ const CourseDetail = () => {
         <div className="mt-10 flex fixed left-0 bottom-10 w-full justify-center gap-5">
           <Link to="/courses" className="bg-gray-800 px-6 py-3 rounded-md">Courses</Link>
           <Link to="/callback" className="bg-gray-800 px-6 py-3 rounded-md">Request Callback</Link>
-          <Link to="/enroll" className="bg-green-500 px-6 py-3 rounded-md text-black font-semibold hover:bg-green-400 transition">
-            Buy Now
-          </Link>
+          <div className="flex gap-2">
+            <button
+              onClick={handleBuyNow}
+              className="bg-green-500 px-6 py-3 rounded-md text-black font-semibold hover:bg-green-400 transition"
+            >
+              {hasPurchased ? "Go to Course" : "Buy Now"}
+            </button>
+
+            {/* Test button for direct purchase */}
+            {!hasPurchased && (
+              <button
+                onClick={() => {
+                  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+
+                  // Direct purchase without payment modal
+                  if (user) {
+                    toast.info("Processing direct purchase...");
+
+                    axios.post(
+                      `${API_URL}/api/student/purchase-course/${course._id}`,
+                      {},
+                      { withCredentials: true }
+                    )
+                      .then(() => {
+                        toast.success("Course purchased successfully!");
+                        navigate(`/course-videos/${course._id}`);
+                      })
+                      .catch(error => {
+                        console.error("Error:", error);
+                        toast.error("Purchase failed. Please try again.");
+                      });
+                  } else {
+                    toast.error("Please login to purchase this course");
+                    navigate("/login");
+                  }
+                }}
+                className="bg-blue-500 px-6 py-3 rounded-md text-white font-semibold hover:bg-blue-400 transition"
+              >
+                Quick Buy (Test)
+              </button>
+            )}
+          </div>
         </div>
       </div>
 

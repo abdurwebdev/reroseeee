@@ -48,7 +48,24 @@ router.post(
   ]),
   async (req, res) => {
     try {
-      const { title, description, price, instructor, duration, category, videoTitles, videoDescriptions } = req.body;
+      const {
+        title,
+        description,
+        price,
+        instructor,
+        duration,
+        category,
+        videoTitles,
+        videoDescriptions
+      } = req.body;
+
+      // Extract payment options
+      const paymentOptions = {
+        jazzCash: req.body['paymentOptions[jazzCash]'] === 'true',
+        easyPaisa: req.body['paymentOptions[easyPaisa]'] === 'true',
+        payFast: req.body['paymentOptions[payFast]'] === 'true',
+        bankTransfer: req.body['paymentOptions[bankTransfer]'] === 'true'
+      };
 
       // Get Cloudinary URLs from uploaded files
       const image = req.files.image ? req.files.image[0].path : null; // Cloudinary URL
@@ -87,6 +104,7 @@ router.post(
         category,
         image,
         videos: videoFiles,
+        paymentOptions
       });
 
       await newCourse.save();
@@ -202,7 +220,24 @@ router.put(
   async (req, res) => {
     try {
       const { id } = req.params;
-      const { title, description, price, instructor, duration, category, videoTitles, videoDescriptions } = req.body;
+      const {
+        title,
+        description,
+        price,
+        instructor,
+        duration,
+        category,
+        videoTitles,
+        videoDescriptions
+      } = req.body;
+
+      // Extract payment options
+      const paymentOptions = {
+        jazzCash: req.body['paymentOptions[jazzCash]'] === 'true',
+        easyPaisa: req.body['paymentOptions[easyPaisa]'] === 'true',
+        payFast: req.body['paymentOptions[payFast]'] === 'true',
+        bankTransfer: req.body['paymentOptions[bankTransfer]'] === 'true'
+      };
 
       // Validate ObjectId
       if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -235,6 +270,17 @@ router.put(
       course.instructor = instructor || course.instructor;
       course.duration = duration || course.duration;
       course.category = category || course.category;
+
+      // Update payment options
+      if (course.paymentOptions) {
+        course.paymentOptions.jazzCash = paymentOptions.jazzCash;
+        course.paymentOptions.easyPaisa = paymentOptions.easyPaisa;
+        course.paymentOptions.payFast = paymentOptions.payFast;
+        course.paymentOptions.bankTransfer = paymentOptions.bankTransfer;
+      } else {
+        course.paymentOptions = paymentOptions;
+      }
+
       if (image) course.image = image;
       if (newVideos.length > 0) {
         course.videos = [...course.videos, ...newVideos];

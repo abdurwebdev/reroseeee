@@ -78,6 +78,24 @@ const courseSchema = new mongoose.Schema(
         ],
       },
     ],
+    paymentOptions: {
+      jazzCash: {
+        type: Boolean,
+        default: false
+      },
+      easyPaisa: {
+        type: Boolean,
+        default: false
+      },
+      payFast: {
+        type: Boolean,
+        default: false
+      },
+      bankTransfer: {
+        type: Boolean,
+        default: false
+      }
+    },
     purchaseLink: {
       type: String,
       required: false,

@@ -27,7 +27,20 @@ import YourVideos from "./pages/YourVideos"; // Your videos page
 import ProfileSetup from "./pages/ProfileSetup";
 import AdminUserDashboard from "./pages/AdminUserDashboard";
 import AdminVideoDashboard from "./pages/AdminVideoDashboard";
+import AdminCourseDashboard from "./pages/AdminCourseDashboard"; // Admin course dashboard
+import CourseVideos from "./pages/CourseVideos"; // Course videos page
 import AdminEarningsDashboard from "./pages/AdminEarningsDashboard"; // Admin earnings dashboard
+import AdminWithdrawalsDashboard from "./pages/AdminWithdrawalsDashboard"; // Admin withdrawals dashboard
+import Playlists from "./pages/Playlists"; // User playlists page
+import Downloads from "./pages/Downloads"; // User downloads page
+import YourClips from "./pages/YourClips"; // User clips page
+import Settings from "./pages/Settings"; // User settings page
+import ReportHistory from "./pages/ReportHistory"; // User report history page
+import Help from "./pages/Help"; // Help center page
+import Feedback from "./pages/Feedback"; // Feedback page
+import PaymentError from "./pages/PaymentError"; // Payment error page
+import PaymentHistory from "./pages/PaymentHistory"; // Payment history page
+import PageTester from "./pages/PageTester"; // Page tester utility
 import GoLive from "./pages/GoLive";
 import WatchLivestream from "./pages/WatchLivestream";
 import ChannelPage from "./pages/ChannelPage"; // Channel page
@@ -64,6 +77,7 @@ function App() {
         <Route path="/admindashboard" element={<Admindashboard />} />
         <Route path="/courses" element={<Courses />} />
         <Route path="/course/:id" element={<CourseDetails />} />
+        <Route path="/course-videos/:courseId" element={<CourseVideos />} />
         <Route path="/requestcallback" element={<RequestCallback />} />
         <Route path="/payment-success" element={<PaymentSuccess />} />
         <Route path="/lms" element={<LMSPage />} />
@@ -74,7 +88,9 @@ function App() {
         <Route path="/profile-setup" element={<ProfileSetup />} />
         <Route path="/admindashboard/user-admin-dashboard" element={<AdminUserDashboard />} />
         <Route path="/admindashboard/video-admin-dashboard" element={<AdminVideoDashboard />} />
+        <Route path="/admindashboard/course-dashboard" element={<AdminCourseDashboard />} />
         <Route path="/admindashboard/earnings-dashboard" element={<AdminEarningsDashboard />} />
+        <Route path="/admindashboard/withdrawals-dashboard" element={<AdminWithdrawalsDashboard />} />
         <Route path="/live-course" element={<GoLive />} />
         <Route path="/watch-livestream/:id" element={<WatchLivestream />} />
         <Route path="/channel/:channelId" element={<ChannelPage />} />
@@ -85,6 +101,17 @@ function App() {
         <Route path="/shorts" element={<Shorts />} />
         <Route path="/subscriptions" element={<Subscriptions />} />
         <Route path="/your-videos" element={<YourVideos />} />
+        <Route path="/playlists" element={<Playlists />} />
+        <Route path="/downloads" element={<Downloads />} />
+        <Route path="/your-clips" element={<YourClips />} />
+        <Route path="/settings" element={<Settings />} />
+        <Route path="/report-history" element={<ReportHistory />} />
+        <Route path="/help" element={<Help />} />
+        <Route path="/feedback" element={<Feedback />} />
+        <Route path="/payment/success" element={<PaymentSuccess />} />
+        <Route path="/payment/error" element={<PaymentError />} />
+        <Route path="/payment/history" element={<PaymentHistory />} />
+        <Route path="/page-tester" element={<PageTester />} />
 
         {/* Creator Studio Routes */}
         <Route path="/studio" element={<CreatorStudio />}>

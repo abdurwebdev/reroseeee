@@ -57,7 +57,7 @@ const LMSPage = () => {
     return new Date(dateString).toLocaleDateString(undefined, options);
   };
 
-  const calculateProgress = () => {
+  const calculateProgress = (course) => {
     // This is a placeholder. In a real app, you would track which videos the user has watched
     // and calculate the progress based on that.
     return Math.floor(Math.random() * 100); // Random progress for demo
@@ -207,12 +207,12 @@ const LMSPage = () => {
                       <div className="mb-4">
                         <div className="flex justify-between items-center mb-1">
                           <span className="text-sm text-gray-400">Progress</span>
-                          <span className="text-sm text-gray-400">{calculateProgress()}%</span>
+                          <span className="text-sm text-gray-400">{calculateProgress(course)}%</span>
                         </div>
                         <div className="w-full bg-gray-700 rounded-full h-2">
                           <div 
                             className="bg-green-500 h-2 rounded-full" 
-                            style={{ width: `${calculateProgress()}%` }}
+                            style={{ width: `${calculateProgress(course)}%` }}
                           ></div>
                         </div>
                       </div>
@@ -278,7 +278,7 @@ const LMSPage = () => {
                         <div className="w-full bg-gray-800 rounded-full h-1 mt-1">
                           <div 
                             className="bg-blue-500 h-1 rounded-full" 
-                            style={{ width: `${calculateProgress()}%` }}
+                            style={{ width: `${calculateProgress(course)}%` }}
                           ></div>
                         </div>
                       </div>
