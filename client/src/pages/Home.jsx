@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import Navbar from "../components/Navbar";
 import { useNavigate } from "react-router-dom";
-import Footer from "../components/Footer";
 
 export default function Home() {
   const [courses, setCourses] = useState([]);
@@ -26,7 +24,6 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-black text-white p-6">
-      <Navbar />
       <h1 className="text-4xl font-bold text-center mb-6">Welcome to My Course Website 🚀</h1>
 
       {loading ? (
@@ -41,7 +38,7 @@ export default function Home() {
               >
                 {course.image && (
                   <img
-                    src={`http://localhost:5000${course.image}`}
+                  src={course.image.startsWith('http') ? course.image : `http://localhost:5000${course.image}`}
                     alt={course.title}
                     className="w-full h-40 object-cover rounded-lg mb-3"
                   />
@@ -70,7 +67,6 @@ export default function Home() {
           )}
         </div>
       )}
-      <Footer />
     </div>
   );
 }

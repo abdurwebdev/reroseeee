@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axiosInstance from "../utils/axiosConfig";
-import { FaBars, FaUser } from "react-icons/fa";
+import { FaBars, FaUser, FaEnvelope } from "react-icons/fa";
 import { showSuccessToast, showErrorToast, showInfoToast } from "../utils/toast";
 import NotificationButton from "./NotificationButton";
 
@@ -157,6 +157,9 @@ export default function Navbar() {
             <Link to="/lms" onClick={closeMenu} className="hover:text-gray-400">LMS</Link>
             <Link to="/live-course" onClick={closeMenu} className="hover:text-gray-400">Live Course</Link>
             <Link to="/feed" onClick={closeMenu} className="hover:text-gray-400">Feed</Link>
+            <Link to="/messages" onClick={closeMenu} className="hover:text-gray-400 flex items-center">
+              <FaEnvelope className="mr-2" /> Messages
+            </Link>
             <button onClick={() => { setShowPopup(true); closeMenu(); }} className="hover:text-gray-400">
               Request Callback
             </button>
@@ -240,6 +243,9 @@ export default function Navbar() {
           <Link to="/lms" className="hover:text-gray-400 font-bold">LMS</Link>
           <Link to="/live-course" className="font-bold hover:text-gray-400">Live Course</Link>
           <Link to="/feed" className="hover:text-gray-400">Feed</Link>
+          <Link to="/messages" className="hover:text-gray-400 flex items-center">
+            <FaEnvelope className="mr-2" /> Messages
+          </Link>
           <button onClick={() => setShowPopup(true)} className="hover:text-gray-400">Request Callback</button>
         </div>
 

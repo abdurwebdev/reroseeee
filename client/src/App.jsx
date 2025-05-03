@@ -2,9 +2,11 @@
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { SocketProvider } from './context/SocketContext';
 import Register from "./pages/Register";
 import Login from "./pages/Login";
 import Home from "./pages/Home";
+import Landing from "./pages/Landing"; // Import the Landing page
 import Dashboard from "./pages/Dashboard";
 import Studentdashboard from "./pages/Studentdashboard";
 import Admindashboard from "./pages/Admindashboard";
@@ -51,6 +53,7 @@ import StudioAnalytics from "./components/studio/StudioAnalytics";
 import StudioMonetization from "./components/studio/StudioMonetization";
 import StudioVerification from "./components/studio/StudioVerification";
 import StudioSettings from "./components/studio/StudioSettings";
+import Messaging from "./pages/Messaging";
 function App() {
   return (
     <BrowserRouter>
@@ -68,61 +71,65 @@ function App() {
         theme="dark"
       />
 
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/studentdashboard" element={<Studentdashboard />} />
-        <Route path="/admindashboard" element={<Admindashboard />} />
-        <Route path="/courses" element={<Courses />} />
-        <Route path="/course/:id" element={<CourseDetails />} />
-        <Route path="/course-videos/:courseId" element={<CourseVideos />} />
-        <Route path="/requestcallback" element={<RequestCallback />} />
-        <Route path="/payment-success" element={<PaymentSuccess />} />
-        <Route path="/lms" element={<LMSPage />} />
-        <Route path="/feed" element={<Feed />} />
-        <Route path="/watch/:id" element={<Watch />} />
-        <Route path="/upload-video" element={<UploadVideo />} />
-        <Route path="/upload-short" element={<UploadShort />} />
-        <Route path="/profile-setup" element={<ProfileSetup />} />
-        <Route path="/admindashboard/user-admin-dashboard" element={<AdminUserDashboard />} />
-        <Route path="/admindashboard/video-admin-dashboard" element={<AdminVideoDashboard />} />
-        <Route path="/admindashboard/course-dashboard" element={<AdminCourseDashboard />} />
-        <Route path="/admindashboard/earnings-dashboard" element={<AdminEarningsDashboard />} />
-        <Route path="/admindashboard/withdrawals-dashboard" element={<AdminWithdrawalsDashboard />} />
-        <Route path="/live-course" element={<GoLive />} />
-        <Route path="/watch-livestream/:id" element={<WatchLivestream />} />
-        <Route path="/channel/:channelId" element={<ChannelPage />} />
-        <Route path="/history" element={<History />} />
-        <Route path="/watch-later" element={<WatchLater />} />
-        <Route path="/liked-videos" element={<LikedVideos />} />
-        <Route path="/trending" element={<Trending />} />
-        <Route path="/shorts" element={<Shorts />} />
-        <Route path="/subscriptions" element={<Subscriptions />} />
-        <Route path="/your-videos" element={<YourVideos />} />
-        <Route path="/playlists" element={<Playlists />} />
-        <Route path="/downloads" element={<Downloads />} />
-        <Route path="/your-clips" element={<YourClips />} />
-        <Route path="/settings" element={<Settings />} />
-        <Route path="/report-history" element={<ReportHistory />} />
-        <Route path="/help" element={<Help />} />
-        <Route path="/feedback" element={<Feedback />} />
-        <Route path="/payment/success" element={<PaymentSuccess />} />
-        <Route path="/payment/error" element={<PaymentError />} />
-        <Route path="/payment/history" element={<PaymentHistory />} />
-        <Route path="/page-tester" element={<PageTester />} />
+      <SocketProvider>
+        <Routes>
+          <Route path="/" element={<Landing />} />
+          <Route path="/home" element={<Home />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/studentdashboard" element={<Studentdashboard />} />
+          <Route path="/admindashboard" element={<Admindashboard />} />
+          <Route path="/courses" element={<Courses />} />
+          <Route path="/course/:id" element={<CourseDetails />} />
+          <Route path="/course-videos/:courseId" element={<CourseVideos />} />
+          <Route path="/requestcallback" element={<RequestCallback />} />
+          <Route path="/payment-success" element={<PaymentSuccess />} />
+          <Route path="/lms" element={<LMSPage />} />
+          <Route path="/feed" element={<Feed />} />
+          <Route path="/watch/:id" element={<Watch />} />
+          <Route path="/upload-video" element={<UploadVideo />} />
+          <Route path="/upload-short" element={<UploadShort />} />
+          <Route path="/profile-setup" element={<ProfileSetup />} />
+          <Route path="/admindashboard/user-admin-dashboard" element={<AdminUserDashboard />} />
+          <Route path="/admindashboard/video-admin-dashboard" element={<AdminVideoDashboard />} />
+          <Route path="/admindashboard/course-dashboard" element={<AdminCourseDashboard />} />
+          <Route path="/admindashboard/earnings-dashboard" element={<AdminEarningsDashboard />} />
+          <Route path="/admindashboard/withdrawals-dashboard" element={<AdminWithdrawalsDashboard />} />
+          <Route path="/live-course" element={<GoLive />} />
+          <Route path="/watch-livestream/:id" element={<WatchLivestream />} />
+          <Route path="/channel/:channelId" element={<ChannelPage />} />
+          <Route path="/history" element={<History />} />
+          <Route path="/watch-later" element={<WatchLater />} />
+          <Route path="/liked-videos" element={<LikedVideos />} />
+          <Route path="/trending" element={<Trending />} />
+          <Route path="/shorts" element={<Shorts />} />
+          <Route path="/subscriptions" element={<Subscriptions />} />
+          <Route path="/your-videos" element={<YourVideos />} />
+          <Route path="/playlists" element={<Playlists />} />
+          <Route path="/downloads" element={<Downloads />} />
+          <Route path="/your-clips" element={<YourClips />} />
+          <Route path="/settings" element={<Settings />} />
+          <Route path="/report-history" element={<ReportHistory />} />
+          <Route path="/help" element={<Help />} />
+          <Route path="/feedback" element={<Feedback />} />
+          <Route path="/payment/success" element={<PaymentSuccess />} />
+          <Route path="/payment/error" element={<PaymentError />} />
+          <Route path="/payment/history" element={<PaymentHistory />} />
+          <Route path="/page-tester" element={<PageTester />} />
 
-        {/* Creator Studio Routes */}
-        <Route path="/studio" element={<CreatorStudio />}>
-          <Route index element={<StudioDashboard />} />
-          <Route path="content" element={<StudioContent />} />
-          <Route path="analytics" element={<StudioAnalytics />} />
-          <Route path="monetization" element={<StudioMonetization />} />
-          <Route path="verification" element={<StudioVerification />} />
-          <Route path="settings" element={<StudioSettings />} />
-        </Route>
-      </Routes>
+          {/* Creator Studio Routes */}
+          <Route path="/studio" element={<CreatorStudio />}>
+            <Route index element={<StudioDashboard />} />
+            <Route path="content" element={<StudioContent />} />
+            <Route path="analytics" element={<StudioAnalytics />} />
+            <Route path="monetization" element={<StudioMonetization />} />
+            <Route path="verification" element={<StudioVerification />} />
+            <Route path="settings" element={<StudioSettings />} />
+          </Route>
+          <Route path="/messages" element={<Messaging />} />
+        </Routes>
+      </SocketProvider>
     </BrowserRouter>
   );
 }
