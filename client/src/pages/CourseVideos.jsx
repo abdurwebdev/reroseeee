@@ -120,9 +120,7 @@ const CourseVideos = () => {
     <div className="min-h-screen bg-black text-white">
       <Navbar />
 
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold mb-6">{course.title}</h1>
-
+      <div className="w-full max-w-[2160px] mx-auto px-4 py-4">
         <CourseVideoPlayer
           course={course}
           videoIndex={currentVideoIndex}

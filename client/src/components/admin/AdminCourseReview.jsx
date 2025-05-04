@@ -22,7 +22,7 @@ const AdminCourseReview = () => {
       const response = await axios.get(`${API_URL}/api/admin/creator-courses/pending`, {
         withCredentials: true
       });
-      
+
       if (response.data.success) {
         setPendingCourses(response.data.courses);
       } else {
@@ -46,7 +46,7 @@ const AdminCourseReview = () => {
       const response = await axios.post(`${API_URL}/api/admin/creator-courses/${id}/approve`, {}, {
         withCredentials: true
       });
-      
+
       if (response.data.success) {
         toast.success("Course approved successfully");
         fetchPendingCourses();
@@ -72,7 +72,7 @@ const AdminCourseReview = () => {
       }, {
         withCredentials: true
       });
-      
+
       if (response.data.success) {
         toast.success("Course rejected successfully");
         fetchPendingCourses();
@@ -100,7 +100,7 @@ const AdminCourseReview = () => {
   return (
     <div className="max-w-7xl mx-auto">
       <h1 className="text-3xl font-bold mb-6">Course Review Dashboard</h1>
-      
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Pending Courses List */}
         <div className="lg:col-span-1 bg-gray-900 rounded-lg p-4">
@@ -110,7 +110,7 @@ const AdminCourseReview = () => {
             </span>
             Pending Courses
           </h2>
-          
+
           {loading ? (
             <div className="flex justify-center py-8">
               <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
@@ -122,19 +122,18 @@ const AdminCourseReview = () => {
           ) : (
             <div className="space-y-3 max-h-[calc(100vh-200px)] overflow-y-auto pr-2">
               {pendingCourses.map((course) => (
-                <div 
-                  key={course._id} 
-                  className={`bg-gray-800 rounded-lg p-3 cursor-pointer transition hover:bg-gray-700 ${
-                    selectedCourse?._id === course._id ? 'border-2 border-blue-500' : ''
-                  }`}
+                <div
+                  key={course._id}
+                  className={`bg-gray-800 rounded-lg p-3 cursor-pointer transition hover:bg-gray-700 ${selectedCourse?._id === course._id ? 'border-2 border-blue-500' : ''
+                    }`}
                   onClick={() => handleViewCourse(course)}
                 >
                   <div className="flex items-center gap-3">
                     <div className="w-16 h-16 rounded-md overflow-hidden flex-shrink-0">
                       {course.image ? (
-                        <img 
-                          src={course.image} 
-                          alt={course.title} 
+                        <img
+                          src={course.image}
+                          alt={course.title}
                           className="w-full h-full object-cover"
                         />
                       ) : (
@@ -143,7 +142,7 @@ const AdminCourseReview = () => {
                         </div>
                       )}
                     </div>
-                    
+
                     <div>
                       <h3 className="font-medium line-clamp-1">{course.title}</h3>
                       <div className="flex items-center text-sm text-gray-400">
@@ -163,14 +162,14 @@ const AdminCourseReview = () => {
             </div>
           )}
         </div>
-        
+
         {/* Course Details */}
         <div className="lg:col-span-2">
           {selectedCourse ? (
             <div className="bg-gray-900 rounded-lg p-6">
               <div className="flex justify-between items-start mb-4">
                 <h2 className="text-2xl font-semibold">{selectedCourse.title}</h2>
-                
+
                 <div className="flex gap-2">
                   <button
                     onClick={() => handleApprove(selectedCourse._id)}
@@ -179,7 +178,7 @@ const AdminCourseReview = () => {
                     <FaCheck className="mr-2" />
                     Approve
                   </button>
-                  
+
                   <button
                     onClick={() => setShowRejectionForm(true)}
                     className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded flex items-center"
@@ -189,14 +188,14 @@ const AdminCourseReview = () => {
                   </button>
                 </div>
               </div>
-              
+
               {showRejectionForm ? (
                 <div className="bg-gray-800 p-4 rounded-lg mb-6">
                   <h3 className="text-lg font-medium mb-2">Rejection Reason</h3>
                   <p className="text-gray-400 text-sm mb-3">
                     Please provide a reason for rejecting this course. This will be shown to the creator.
                   </p>
-                  
+
                   <textarea
                     value={rejectionReason}
                     onChange={(e) => setRejectionReason(e.target.value)}
@@ -204,7 +203,7 @@ const AdminCourseReview = () => {
                     placeholder="Reason for rejection..."
                     rows="4"
                   ></textarea>
-                  
+
                   <div className="flex justify-end gap-2">
                     <button
                       onClick={() => setShowRejectionForm(false)}
@@ -212,7 +211,7 @@ const AdminCourseReview = () => {
                     >
                       Cancel
                     </button>
-                    
+
                     <button
                       onClick={() => handleReject(selectedCourse._id)}
                       className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded"
@@ -227,9 +226,9 @@ const AdminCourseReview = () => {
                     <div>
                       <div className="aspect-video rounded-lg overflow-hidden mb-4">
                         {selectedCourse.image ? (
-                          <img 
-                            src={selectedCourse.image} 
-                            alt={selectedCourse.title} 
+                          <img
+                            src={selectedCourse.image}
+                            alt={selectedCourse.title}
                             className="w-full h-full object-cover"
                           />
                         ) : (
@@ -238,7 +237,7 @@ const AdminCourseReview = () => {
                           </div>
                         )}
                       </div>
-                      
+
                       <div className="grid grid-cols-2 gap-4">
                         <div className="bg-gray-800 p-3 rounded-lg flex items-center">
                           <FaMoneyBillWave className="text-green-500 mr-2 text-xl" />
@@ -247,7 +246,7 @@ const AdminCourseReview = () => {
                             <p className="font-medium">${selectedCourse.price}</p>
                           </div>
                         </div>
-                        
+
                         <div className="bg-gray-800 p-3 rounded-lg flex items-center">
                           <FaVideo className="text-blue-500 mr-2 text-xl" />
                           <div>
@@ -255,7 +254,7 @@ const AdminCourseReview = () => {
                             <p className="font-medium">{selectedCourse.videos?.length || 0}</p>
                           </div>
                         </div>
-                        
+
                         <div className="bg-gray-800 p-3 rounded-lg flex items-center">
                           <FaCalendarAlt className="text-yellow-500 mr-2 text-xl" />
                           <div>
@@ -263,7 +262,7 @@ const AdminCourseReview = () => {
                             <p className="font-medium">{selectedCourse.duration}</p>
                           </div>
                         </div>
-                        
+
                         <div className="bg-gray-800 p-3 rounded-lg flex items-center">
                           <FaUser className="text-purple-500 mr-2 text-xl" />
                           <div>
@@ -273,15 +272,15 @@ const AdminCourseReview = () => {
                         </div>
                       </div>
                     </div>
-                    
+
                     <div>
                       <div className="bg-gray-800 p-4 rounded-lg mb-4">
                         <h3 className="text-lg font-medium mb-2">Creator Information</h3>
                         <div className="flex items-center mb-3">
                           {selectedCourse.creatorId?.profileImageUrl ? (
-                            <img 
-                              src={selectedCourse.creatorId.profileImageUrl} 
-                              alt={selectedCourse.creatorId.name} 
+                            <img
+                              src={selectedCourse.creatorId.profileImageUrl}
+                              alt={selectedCourse.creatorId.name}
                               className="w-10 h-10 rounded-full mr-3"
                             />
                           ) : (
@@ -297,26 +296,26 @@ const AdminCourseReview = () => {
                           </div>
                         </div>
                       </div>
-                      
+
                       <div className="bg-gray-800 p-4 rounded-lg">
                         <h3 className="text-lg font-medium mb-2">Description</h3>
                         <p className="text-gray-300 whitespace-pre-line">{selectedCourse.description}</p>
                       </div>
                     </div>
                   </div>
-                  
+
                   <div className="bg-gray-800 p-4 rounded-lg">
                     <h3 className="text-lg font-medium mb-4">Course Videos</h3>
-                    
+
                     {selectedCourse.videos && selectedCourse.videos.length > 0 ? (
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         {selectedCourse.videos.map((video, index) => (
                           <div key={index} className="bg-gray-700 rounded-lg overflow-hidden">
                             <div className="aspect-video bg-gray-900">
                               {video.thumbnail ? (
-                                <img 
-                                  src={video.thumbnail} 
-                                  alt={video.title} 
+                                <img
+                                  src={video.thumbnail}
+                                  alt={video.title}
                                   className="w-full h-full object-cover"
                                 />
                               ) : (

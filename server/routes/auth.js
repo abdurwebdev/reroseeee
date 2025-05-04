@@ -3,6 +3,8 @@ const { registerUser, loginUser, logoutUser, updateProfile, handleUpload, authMi
 const router = express.Router();
 const User = require("../models/User");
 const { protect, authorizeRoles } = require("../middleware/authMiddleware");
+const passport = require("../config/passport");
+const jwt = require("jsonwebtoken");
 
 router.post("/register",handleUpload, registerUser);
 router.post("/login", loginUser);
@@ -25,5 +27,36 @@ router.get("/admin", protect, authorizeRoles("admin"), (req, res) => {
 router.get("/student", protect, authorizeRoles("student"), (req, res) => {
   res.json({ message: "Welcome Student" });
 });
+
+// Google OAuth routes
+router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
+
+router.get('/google/callback',
+  passport.authenticate('google', { session: false, failureRedirect: '/login' }),
+  (req, res) => {
+    try {
+      // Generate JWT token
+      const token = jwt.sign(
+        { id: req.user._id, role: req.user.role },
+        process.env.JWT_SECRET,
+        { expiresIn: '1h' }
+      );
+
+      // Set cookie
+      res.cookie('token', token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'Lax',
+        maxAge: 60 * 60 * 1000,
+      });
+
+      // Redirect to frontend with token
+      res.redirect(`${process.env.CLIENT_URL || 'http://localhost:5173'}/auth-success?token=${token}`);
+    } catch (error) {
+      console.error('Google auth callback error:', error);
+      res.redirect(`${process.env.CLIENT_URL || 'http://localhost:5173'}/login?error=auth_failed`);
+    }
+  }
+);
 
 module.exports = router;

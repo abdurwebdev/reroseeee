@@ -56,6 +56,7 @@ import StudioSettings from "./components/studio/StudioSettings";
 import CreatorCourseDashboard from "./components/studio/CreatorCourseDashboard";
 import AdminCourseReviewDashboard from "./components/admin/AdminCourseReviewDashboard";
 import Messaging from "./pages/Messaging";
+import AuthSuccess from "./pages/AuthSuccess";
 function App() {
   return (
     <BrowserRouter>
@@ -134,6 +135,7 @@ function App() {
           {/* Admin Course Review Route */}
           <Route path="/admindashboard/course-review" element={<AdminCourseReviewDashboard />} />
           <Route path="/messages" element={<Messaging />} />
+          <Route path="/auth-success" element={<AuthSuccess />} />
         </Routes>
       </SocketProvider>
     </BrowserRouter>

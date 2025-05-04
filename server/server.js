@@ -5,6 +5,7 @@ const cookieParser = require("cookie-parser");
 const path = require("path");
 const http = require("http");
 const socketIo = require("socket.io");
+const passport = require("passport");
 
 const connectDB = require("./config/db");
 const Course = require("./models/Course");
@@ -50,6 +51,7 @@ app.use(
     credentials: true,
   })
 );
+app.use(passport.initialize());
 
 // Routes
 app.get("/", (req, res) => {

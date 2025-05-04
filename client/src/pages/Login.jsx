@@ -89,9 +89,12 @@ const Login = () => {
           </button>
         </form>
         <div className="flex flex-col items-center gap-4 mt-6">
-          <button className="flex items-center gap-3 bg-gray-900 text-white px-6 py-3 rounded-md shadow-lg w-96 justify-center hover:bg-gray-800 transition-all">
+          <a
+            href="http://localhost:5000/api/auth/google"
+            className="flex items-center gap-3 bg-gray-900 text-white px-6 py-3 rounded-md shadow-lg w-96 justify-center hover:bg-gray-800 transition-all"
+          >
             <span className="text-xl">🔵</span> Continue with Google
-          </button>
+          </a>
           <Link to="/register" className="flex items-center gap-3 bg-gray-900 text-white px-6 py-3 rounded-md shadow-lg w-96 justify-center hover:bg-gray-800 transition-all">
             <span className="text-xl">👤</span> Create a New Account
           </Link>
