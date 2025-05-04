@@ -18,7 +18,7 @@ const StudioDashboard = () => {
       try {
         setLoading(true);
         const response = await axios.get(`${API_URL}/api/studio/overview`, { withCredentials: true });
-        
+
         if (response.data.success) {
           setDashboardData(response.data.data);
         } else {
@@ -83,7 +83,7 @@ const StudioDashboard = () => {
     return (
       <div className="text-center py-10">
         <p className="text-red-500 mb-4">{error}</p>
-        <button 
+        <button
           onClick={() => window.location.reload()}
           className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded"
         >
@@ -96,7 +96,7 @@ const StudioDashboard = () => {
   return (
     <div className="max-w-7xl mx-auto">
       <h1 className="text-3xl font-bold mb-6">Creator Studio Dashboard</h1>
-      
+
       {/* Channel stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <div className="bg-gray-800 rounded-lg p-6 shadow-lg">
@@ -113,7 +113,7 @@ const StudioDashboard = () => {
             Lifetime channel views
           </div>
         </div>
-        
+
         <div className="bg-gray-800 rounded-lg p-6 shadow-lg">
           <div className="flex items-center mb-4">
             <div className="bg-purple-600 p-3 rounded-full mr-4">
@@ -125,13 +125,13 @@ const StudioDashboard = () => {
             </div>
           </div>
           <div className="text-gray-400 text-sm">
-            {dashboardData?.monetization?.isEligible ? 
-              <span className="text-green-400">Eligible for monetization</span> : 
+            {dashboardData?.monetization?.isEligible ?
+              <span className="text-green-400">Eligible for monetization</span> :
               <span>Need {1000 - (dashboardData?.channel?.subscriberCount || 0)} more for monetization</span>
             }
           </div>
         </div>
-        
+
         <div className="bg-gray-800 rounded-lg p-6 shadow-lg">
           <div className="flex items-center mb-4">
             <div className="bg-green-600 p-3 rounded-full mr-4">
@@ -143,13 +143,13 @@ const StudioDashboard = () => {
             </div>
           </div>
           <div className="text-gray-400 text-sm">
-            {(dashboardData?.analytics?.totalWatchTimeMinutes || 0) >= 240000 ? 
-              <span className="text-green-400">Meets 4000 hour requirement</span> : 
+            {(dashboardData?.analytics?.totalWatchTimeMinutes || 0) >= 240000 ?
+              <span className="text-green-400">Meets 4000 hour requirement</span> :
               <span>Need {formatTime(240000 - (dashboardData?.analytics?.totalWatchTimeMinutes || 0))} more</span>
             }
           </div>
         </div>
-        
+
         <div className="bg-gray-800 rounded-lg p-6 shadow-lg">
           <div className="flex items-center mb-4">
             <div className="bg-red-600 p-3 rounded-full mr-4">
@@ -161,54 +161,53 @@ const StudioDashboard = () => {
             </div>
           </div>
           <div className="text-gray-400 text-sm">
-            {dashboardData?.channel?.isMonetized ? 
-              <span className="text-green-400">Channel is monetized</span> : 
+            {dashboardData?.channel?.isMonetized ?
+              <span className="text-green-400">Channel is monetized</span> :
               <span>Not monetized yet</span>
             }
           </div>
         </div>
       </div>
-      
+
       {/* Monetization status */}
       <div className="bg-gray-800 rounded-lg p-6 mb-8">
         <h2 className="text-xl font-bold mb-4">Monetization Status</h2>
-        
+
         <div className="flex flex-col md:flex-row md:items-center justify-between">
           <div className="mb-4 md:mb-0">
             <p className="text-lg">
-              Status: 
-              <span className={`ml-2 font-semibold ${
-                dashboardData?.channel?.monetizationStatus === 'approved' ? 'text-green-400' :
-                dashboardData?.channel?.monetizationStatus === 'under_review' ? 'text-yellow-400' :
-                'text-gray-400'
-              }`}>
+              Status:
+              <span className={`ml-2 font-semibold ${dashboardData?.channel?.monetizationStatus === 'approved' ? 'text-green-400' :
+                  dashboardData?.channel?.monetizationStatus === 'under_review' ? 'text-yellow-400' :
+                    'text-gray-400'
+                }`}>
                 {dashboardData?.channel?.monetizationStatus === 'approved' ? 'Approved' :
-                 dashboardData?.channel?.monetizationStatus === 'under_review' ? 'Under Review' :
-                 dashboardData?.channel?.monetizationStatus === 'rejected' ? 'Rejected' :
-                 'Not Eligible'}
+                  dashboardData?.channel?.monetizationStatus === 'under_review' ? 'Under Review' :
+                    dashboardData?.channel?.monetizationStatus === 'rejected' ? 'Rejected' :
+                      'Not Eligible'}
               </span>
             </p>
-            
+
             {dashboardData?.monetization?.application && (
               <p className="text-gray-400 mt-1">
                 Applied on: {formatDate(dashboardData.monetization.application.applicationDate)}
               </p>
             )}
           </div>
-          
+
           <div>
-            {!dashboardData?.channel?.isMonetized && dashboardData?.monetization?.isEligible && 
-             dashboardData?.channel?.monetizationStatus === 'not_eligible' && (
-              <Link 
-                to="/studio/monetization"
-                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded"
-              >
-                Apply for Monetization
-              </Link>
-            )}
-            
+            {!dashboardData?.channel?.isMonetized && dashboardData?.monetization?.isEligible &&
+              dashboardData?.channel?.monetizationStatus === 'not_eligible' && (
+                <Link
+                  to="/studio/monetization"
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded"
+                >
+                  Apply for Monetization
+                </Link>
+              )}
+
             {dashboardData?.channel?.isMonetized && (
-              <Link 
+              <Link
                 to="/studio/monetization"
                 className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded"
               >
@@ -217,7 +216,7 @@ const StudioDashboard = () => {
             )}
           </div>
         </div>
-        
+
         {/* Requirements progress */}
         <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="bg-gray-900 p-4 rounded-lg">
@@ -228,13 +227,13 @@ const StudioDashboard = () => {
               </span>
             </div>
             <div className="w-full bg-gray-700 rounded-full h-2.5">
-              <div 
+              <div
                 className={`h-2.5 rounded-full ${(dashboardData?.channel?.subscriberCount || 0) >= 1000 ? 'bg-green-600' : 'bg-blue-600'}`}
                 style={{ width: `${Math.min(100, ((dashboardData?.channel?.subscriberCount || 0) / 1000) * 100)}%` }}
               ></div>
             </div>
           </div>
-          
+
           <div className="bg-gray-900 p-4 rounded-lg">
             <div className="flex justify-between mb-2">
               <span>Watch Hours</span>
@@ -243,13 +242,13 @@ const StudioDashboard = () => {
               </span>
             </div>
             <div className="w-full bg-gray-700 rounded-full h-2.5">
-              <div 
+              <div
                 className={`h-2.5 rounded-full ${(dashboardData?.analytics?.totalWatchTimeMinutes || 0) >= 240000 ? 'bg-green-600' : 'bg-blue-600'}`}
                 style={{ width: `${Math.min(100, ((dashboardData?.analytics?.totalWatchTimeMinutes || 0) / 240000) * 100)}%` }}
               ></div>
             </div>
           </div>
-          
+
           <div className="bg-gray-900 p-4 rounded-lg">
             <div className="flex justify-between mb-2">
               <span>Short Views</span>
@@ -258,7 +257,7 @@ const StudioDashboard = () => {
               </span>
             </div>
             <div className="w-full bg-gray-700 rounded-full h-2.5">
-              <div 
+              <div
                 className={`h-2.5 rounded-full ${(dashboardData?.channel?.totalShortViews || 0) >= 10000000 ? 'bg-green-600' : 'bg-blue-600'}`}
                 style={{ width: `${Math.min(100, ((dashboardData?.channel?.totalShortViews || 0) / 10000000) * 100)}%` }}
               ></div>
@@ -266,7 +265,7 @@ const StudioDashboard = () => {
           </div>
         </div>
       </div>
-      
+
       {/* Recent content */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Recent videos */}
@@ -277,14 +276,14 @@ const StudioDashboard = () => {
               View All
             </Link>
           </div>
-          
+
           {dashboardData?.recentVideos?.length > 0 ? (
             <div className="space-y-4">
               {dashboardData.recentVideos.map((video) => (
                 <div key={video._id} className="flex items-center">
-                  <img 
-                    src={video.thumbnailUrl} 
-                    alt={video.title} 
+                  <img
+                    src={video.thumbnailUrl}
+                    alt={video.title}
                     className="w-24 h-16 object-cover rounded mr-4"
                   />
                   <div className="flex-1">
@@ -303,7 +302,7 @@ const StudioDashboard = () => {
             <p className="text-gray-400">No videos uploaded yet</p>
           )}
         </div>
-        
+
         {/* Recent livestreams */}
         <div className="bg-gray-800 rounded-lg p-6">
           <div className="flex justify-between items-center mb-4">
@@ -312,7 +311,7 @@ const StudioDashboard = () => {
               Go Live
             </Link>
           </div>
-          
+
           {dashboardData?.recentLivestreams?.length > 0 ? (
             <div className="space-y-4">
               {dashboardData.recentLivestreams.map((stream) => (
@@ -323,12 +322,11 @@ const StudioDashboard = () => {
                   <div className="flex-1">
                     <h3 className="font-medium truncate">{stream.name}</h3>
                     <div className="flex items-center text-sm text-gray-400 mt-1">
-                      <span className={`mr-3 ${
-                        stream.status === 'active' ? 'text-green-500' : 
-                        stream.status === 'ended' ? 'text-gray-400' : 'text-yellow-500'
-                      }`}>
-                        {stream.status === 'active' ? 'Live' : 
-                         stream.status === 'ended' ? 'Ended' : 'Idle'}
+                      <span className={`mr-3 ${stream.status === 'active' ? 'text-green-500' :
+                          stream.status === 'ended' ? 'text-gray-400' : 'text-yellow-500'
+                        }`}>
+                        {stream.status === 'active' ? 'Live' :
+                          stream.status === 'ended' ? 'Ended' : 'Idle'}
                       </span>
                       <span className="flex items-center mr-3">
                         <FaEye className="mr-1" /> {formatNumber(stream.viewers)}

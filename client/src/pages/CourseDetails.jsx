@@ -24,7 +24,12 @@ const CourseDetail = () => {
       try {
         const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
         const res = await axios.get(`${API_URL}/api/courses/${id}`);
-        setCourse(res.data);
+
+        if (res.data.success) {
+          setCourse(res.data.course);
+        } else {
+          setCourse(res.data); // Fallback for backward compatibility
+        }
       } catch (error) {
         console.error("Error fetching course details:", error);
         toast.error("Failed to load course details");
@@ -146,6 +151,27 @@ const CourseDetail = () => {
           <p className="text-sm text-gray-500">
             <span className="font-semibold text-white">Category:</span> {course?.category}
           </p>
+
+          {/* Creator Information (if it's a creator course) */}
+          {course?.creatorId && (
+            <div className="mt-4 flex items-center bg-gray-800 p-3 rounded-lg">
+              {course.creatorId.profileImageUrl ? (
+                <img
+                  src={course.creatorId.profileImageUrl}
+                  alt={course.creatorId.name}
+                  className="w-10 h-10 rounded-full mr-3"
+                />
+              ) : (
+                <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center mr-3">
+                  <span className="text-white font-bold">{course.creatorId.name?.charAt(0)}</span>
+                </div>
+              )}
+              <div>
+                <p className="font-semibold">Created by: {course.creatorId.name}</p>
+                <p className="text-sm text-gray-400">Creator</p>
+              </div>
+            </div>
+          )}
 
           {/* Pricing */}
           <div className="mt-6">

@@ -322,4 +322,129 @@ router.get("/courses/:id", async (req, res) => {
   }
 });
 
+// Get pending creator courses for review
+router.get("/creator-courses/pending", protect, authorizeRoles("admin"), async (req, res) => {
+  try {
+    const pendingCourses = await Course.find({ status: "pending_review" })
+      .populate("creatorId", "name email profileImageUrl");
+
+    res.status(200).json({
+      success: true,
+      courses: pendingCourses
+    });
+  } catch (error) {
+    console.error("Error fetching pending courses:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch pending courses",
+      error: error.message
+    });
+  }
+});
+
+// Approve a creator course
+router.post("/creator-courses/:id/approve", protect, authorizeRoles("admin"), async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Validate ObjectId
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid course ID format"
+      });
+    }
+
+    const course = await Course.findById(id);
+    if (!course) {
+      return res.status(404).json({
+        success: false,
+        message: "Course not found"
+      });
+    }
+
+    // Check if course is pending review
+    if (course.status !== "pending_review") {
+      return res.status(400).json({
+        success: false,
+        message: "Only courses in 'pending_review' status can be approved"
+      });
+    }
+
+    // Update course status to published
+    course.status = "published";
+    await course.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Course approved and published successfully",
+      course
+    });
+  } catch (error) {
+    console.error("Error approving course:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to approve course",
+      error: error.message
+    });
+  }
+});
+
+// Reject a creator course
+router.post("/creator-courses/:id/reject", protect, authorizeRoles("admin"), async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { rejectionReason } = req.body;
+
+    // Validate ObjectId
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid course ID format"
+      });
+    }
+
+    if (!rejectionReason) {
+      return res.status(400).json({
+        success: false,
+        message: "Rejection reason is required"
+      });
+    }
+
+    const course = await Course.findById(id);
+    if (!course) {
+      return res.status(404).json({
+        success: false,
+        message: "Course not found"
+      });
+    }
+
+    // Check if course is pending review
+    if (course.status !== "pending_review") {
+      return res.status(400).json({
+        success: false,
+        message: "Only courses in 'pending_review' status can be rejected"
+      });
+    }
+
+    // Update course status to rejected
+    course.status = "rejected";
+    course.rejectionReason = rejectionReason;
+    await course.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Course rejected successfully",
+      course
+    });
+  } catch (error) {
+    console.error("Error rejecting course:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to reject course",
+      error: error.message
+    });
+  }
+});
+
 module.exports = router;

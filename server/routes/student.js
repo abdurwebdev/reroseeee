@@ -73,18 +73,32 @@ router.post("/courses/:courseId/videos/:videoIndex/dislike", protect, async (req
   }
 });
 
-// Get all courses (already in your code, no change needed)
+// Get all courses (including published creator courses)
 router.get("/courses", protect, async (req, res) => {
   try {
-    const courses = await Course.find();
-    res.status(200).json(courses);
+    // Get all admin courses and published creator courses
+    const courses = await Course.find({
+      $or: [
+        { creatorId: { $exists: false } }, // Admin courses
+        { creatorId: { $exists: true }, status: "published" } // Published creator courses
+      ]
+    }).populate("creatorId", "name profileImageUrl");
+
+    res.status(200).json({
+      success: true,
+      courses
+    });
   } catch (error) {
     console.error("Error fetching courses:", error);
-    res.status(500).json({ message: "Failed to fetch courses" });
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch courses",
+      error: error.message
+    });
   }
 });
 
-// Comment route (unchanged, included for completeness)
+// Comment route (updated to include profile image and username)
 router.post("/courses/:courseId/videos/:videoIndex/comment", protect, async (req, res) => {
   try {
     const { courseId, videoIndex } = req.params;
@@ -93,17 +107,136 @@ router.post("/courses/:courseId/videos/:videoIndex/comment", protect, async (req
 
     const course = await Course.findById(courseId);
     if (!course || videoIndex >= course.videos.length) {
-      return res.status(404).json({ message: "Course or video not found" });
+      return res.status(404).json({
+        success: false,
+        message: "Course or video not found"
+      });
     }
 
-    const video = course.videos[videoIndex];
-    video.comments.push({ userId, comment });
+    // Get user information
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found"
+      });
+    }
+
+    // Check if user is the course creator
+    const isCreator = course.creatorId && course.creatorId.toString() === userId.toString();
+
+    // Create the comment
+    const newComment = {
+      userId,
+      username: user.name,
+      profileImage: user.profileImageUrl || null,
+      comment,
+      createdAt: new Date(),
+      isCreator,
+      replies: []
+    };
+
+    // Add the comment to the video
+    course.videos[videoIndex].comments.push(newComment);
     await course.save();
 
-    res.status(200).json({ comments: video.comments });
+    res.status(201).json({
+      success: true,
+      message: "Comment added successfully",
+      comment: newComment
+    });
   } catch (error) {
     console.error("Error adding comment:", error);
-    res.status(500).json({ message: "Failed to add comment" });
+    res.status(500).json({
+      success: false,
+      message: "Failed to add comment",
+      error: error.message
+    });
+  }
+});
+
+// Add a reply to a comment
+router.post("/courses/:courseId/videos/:videoIndex/comments/:commentId/reply", protect, async (req, res) => {
+  try {
+    const { courseId, videoIndex, commentId } = req.params;
+    const { comment } = req.body;
+    const userId = req.user._id;
+
+    // Validate course ID
+    if (!courseId.match(/^[0-9a-fA-F]{24}$/)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid course ID format"
+      });
+    }
+
+    // Find the course
+    const course = await Course.findById(courseId);
+    if (!course) {
+      return res.status(404).json({
+        success: false,
+        message: "Course not found"
+      });
+    }
+
+    // Check if video exists
+    if (!course.videos[videoIndex]) {
+      return res.status(404).json({
+        success: false,
+        message: "Video not found"
+      });
+    }
+
+    // Get user information
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found"
+      });
+    }
+
+    // Check if user is the course creator
+    const isCreator = course.creatorId && course.creatorId.toString() === userId.toString();
+
+    // Find the comment
+    const commentIndex = course.videos[videoIndex].comments.findIndex(
+      (c) => c._id.toString() === commentId
+    );
+
+    if (commentIndex === -1) {
+      return res.status(404).json({
+        success: false,
+        message: "Comment not found"
+      });
+    }
+
+    // Create the reply
+    const newReply = {
+      userId,
+      username: user.name,
+      profileImage: user.profileImageUrl || null,
+      comment,
+      createdAt: new Date(),
+      isCreator
+    };
+
+    // Add the reply to the comment
+    course.videos[videoIndex].comments[commentIndex].replies.push(newReply);
+    await course.save();
+
+    res.status(201).json({
+      success: true,
+      message: "Reply added successfully",
+      reply: newReply
+    });
+  } catch (error) {
+    console.error("Error adding reply:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to add reply",
+      error: error.message
+    });
   }
 });
 

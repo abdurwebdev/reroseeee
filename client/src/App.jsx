@@ -53,6 +53,8 @@ import StudioAnalytics from "./components/studio/StudioAnalytics";
 import StudioMonetization from "./components/studio/StudioMonetization";
 import StudioVerification from "./components/studio/StudioVerification";
 import StudioSettings from "./components/studio/StudioSettings";
+import CreatorCourseDashboard from "./components/studio/CreatorCourseDashboard";
+import AdminCourseReviewDashboard from "./components/admin/AdminCourseReviewDashboard";
 import Messaging from "./pages/Messaging";
 function App() {
   return (
@@ -122,11 +124,15 @@ function App() {
           <Route path="/studio" element={<CreatorStudio />}>
             <Route index element={<StudioDashboard />} />
             <Route path="content" element={<StudioContent />} />
+            <Route path="courses" element={<CreatorCourseDashboard />} />
             <Route path="analytics" element={<StudioAnalytics />} />
             <Route path="monetization" element={<StudioMonetization />} />
             <Route path="verification" element={<StudioVerification />} />
             <Route path="settings" element={<StudioSettings />} />
           </Route>
+
+          {/* Admin Course Review Route */}
+          <Route path="/admindashboard/course-review" element={<AdminCourseReviewDashboard />} />
           <Route path="/messages" element={<Messaging />} />
         </Routes>
       </SocketProvider>

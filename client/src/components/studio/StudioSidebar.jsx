@@ -1,16 +1,35 @@
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { NavLink } from 'react-router-dom';
-import { 
-  FaHome, 
-  FaVideo, 
-  FaChartBar, 
-  FaDollarSign, 
-  FaCheckCircle, 
+import {
+  FaHome,
+  FaVideo,
+  FaChartBar,
+  FaDollarSign,
+  FaCheckCircle,
   FaCog,
-  FaUpload
+  FaUpload,
+  FaBook,
+  FaUserGraduate
 } from 'react-icons/fa';
 
 const StudioSidebar = ({ user }) => {
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const dropdownRef = useRef(null);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
   // Define sidebar links
   const sidebarLinks = [
     {
@@ -23,6 +42,11 @@ const StudioSidebar = ({ user }) => {
       to: '/studio/content',
       icon: <FaVideo className="text-xl" />,
       text: 'Content'
+    },
+    {
+      to: '/studio/courses',
+      icon: <FaBook className="text-xl" />,
+      text: 'Courses'
     },
     {
       to: '/studio/analytics',
@@ -45,7 +69,7 @@ const StudioSidebar = ({ user }) => {
       text: 'Settings'
     }
   ];
-  
+
   // Upload links
   const uploadLinks = [
     {
@@ -59,6 +83,10 @@ const StudioSidebar = ({ user }) => {
     {
       to: '/live-course',
       text: 'Go Live'
+    },
+    {
+      to: '/studio/courses',
+      text: 'Create Course'
     }
   ];
 
@@ -67,9 +95,9 @@ const StudioSidebar = ({ user }) => {
       {/* Channel info */}
       <div className="mb-6 flex items-center">
         {user?.profileImageUrl ? (
-          <img 
-            src={user.profileImageUrl} 
-            alt={user.name} 
+          <img
+            src={user.profileImageUrl}
+            alt={user.name}
             className="w-10 h-10 rounded-full mr-3"
           />
         ) : (
@@ -82,30 +110,36 @@ const StudioSidebar = ({ user }) => {
           <p className="text-gray-400 text-sm">Creator Studio</p>
         </div>
       </div>
-      
+
       {/* Create button */}
       <div className="mb-6">
-        <div className="relative group">
-          <button className="bg-red-600 hover:bg-red-700 text-white w-full py-2 px-4 rounded-lg flex items-center justify-center">
+        <div className="relative" ref={dropdownRef}>
+          <button
+            className="bg-red-600 hover:bg-red-700 text-white w-full py-2 px-4 rounded-lg flex items-center justify-center"
+            onClick={() => setDropdownOpen(!dropdownOpen)}
+          >
             <FaUpload className="mr-2" />
             <span>Create</span>
           </button>
-          
+
           {/* Dropdown menu */}
-          <div className="absolute left-0 mt-2 w-full bg-gray-800 rounded-lg shadow-lg overflow-hidden z-10 hidden group-hover:block">
-            {uploadLinks.map((link, index) => (
-              <NavLink
-                key={index}
-                to={link.to}
-                className="block px-4 py-2 text-white hover:bg-gray-700"
-              >
-                {link.text}
-              </NavLink>
-            ))}
-          </div>
+          {dropdownOpen && (
+            <div className="absolute left-0 mt-2 w-full bg-gray-800 rounded-lg shadow-lg overflow-hidden z-10">
+              {uploadLinks.map((link, index) => (
+                <NavLink
+                  key={index}
+                  to={link.to}
+                  className="block px-4 py-2 text-white hover:bg-gray-700"
+                  onClick={() => setDropdownOpen(false)}
+                >
+                  {link.text}
+                </NavLink>
+              ))}
+            </div>
+          )}
         </div>
       </div>
-      
+
       {/* Navigation links */}
       <nav className="flex-1">
         <ul className="space-y-2">
@@ -114,11 +148,10 @@ const StudioSidebar = ({ user }) => {
               <NavLink
                 to={link.to}
                 end={link.end}
-                className={({ isActive }) => 
-                  `flex items-center px-4 py-2 rounded-lg transition-colors ${
-                    isActive 
-                      ? 'bg-gray-800 text-white' 
-                      : 'text-gray-400 hover:bg-gray-800 hover:text-white'
+                className={({ isActive }) =>
+                  `flex items-center px-4 py-2 rounded-lg transition-colors ${isActive
+                    ? 'bg-gray-800 text-white'
+                    : 'text-gray-400 hover:bg-gray-800 hover:text-white'
                   }`
                 }
               >
@@ -129,7 +162,7 @@ const StudioSidebar = ({ user }) => {
           ))}
         </ul>
       </nav>
-      
+
       {/* Channel link */}
       <div className="mt-6 pt-6 border-t border-gray-800">
         <NavLink

@@ -26,6 +26,7 @@ const userLibraryRoutes = require('./routes/userLibraryRoutes');
 const withdrawalRoutes = require('./routes/withdrawalRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
 const messageRoutes = require('./routes/messageRoutes');
+const creatorCourseRoutes = require('./routes/creatorCourseRoutes');
 dotenv.config();
 connectDB();
 
@@ -72,6 +73,7 @@ app.use('/api/library', userLibraryRoutes);
 app.use('/api/withdrawals', withdrawalRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/messages', messageRoutes);
+app.use('/api/creator/courses', creatorCourseRoutes);
 // Protected route for testing auth middleware
 app.get(
   "/api/protected",

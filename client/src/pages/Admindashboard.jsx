@@ -258,6 +258,7 @@ const Admindashboard = () => {
           <Link to='user-admin-dashboard' className="px-4 py-2 rounded-md bg-blue-500">Manage Users</Link>
           <Link to='video-admin-dashboard' className="px-4 py-2 rounded-md bg-blue-500">Manage Videos</Link>
           <Link to='course-dashboard' className="px-4 py-2 rounded-md bg-indigo-500">Manage Courses</Link>
+          <Link to='course-review' className="px-4 py-2 rounded-md bg-yellow-500">Review Creator Courses</Link>
           <Link to='earnings-dashboard' className="px-4 py-2 rounded-md bg-green-500">Earnings Dashboard</Link>
           <Link to='withdrawals-dashboard' className="px-4 py-2 rounded-md bg-purple-500">Manage Withdrawals</Link>
         </div>
@@ -277,7 +278,7 @@ const Admindashboard = () => {
         )}
 
 
-      
+
 
         {/* Course List */}
         <h2 className="text-2xl font-bold text-white mb-2">Available Courses</h2>
