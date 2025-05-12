@@ -4,6 +4,7 @@ const FreeVideo = require('../models/FreeVideo');
 const User = require('../models/User');
 const { protect } = require('../middleware/authMiddleware');
 const upload = require('../middleware/cloudinaryUpload');
+const { validateCodingVideo } = require('../middleware/codingVideoValidator');
 const { sendUploadNotifications } = require('../utils/notificationHelper');
 
 // Get all videos (public feed)
@@ -49,20 +50,105 @@ router.get('/trending', async (req, res) => {
 });
 
 
-router.post('/upload-video', protect, upload, async (req, res) => {
+router.post('/upload-video', protect, upload, validateCodingVideo, async (req, res) => {
   try {
-    const { title, uploader } = req.body;
+    const {
+      title,
+      uploader,
+      description,
+      programmingLanguages,
+      frameworks,
+      difficultyLevel,
+      codeSnippets,
+      resources,
+      tags,
+      duration
+    } = req.body;
+
     const videoFile = req.files.video[0];
     const thumbnailFile = req.files.thumbnail[0];
     const uploaderId = req.user._id; // Get the uploader's ID from the authenticated user
 
+    // Safely parse JSON strings with error handling
+    let parsedLanguages = [];
+    let parsedFrameworks = [];
+    let parsedTags = [];
+    let parsedCodeSnippets = [];
+    let parsedResources = [];
+
+    // Parse programming languages if provided
+    if (programmingLanguages) {
+      try {
+        parsedLanguages = typeof programmingLanguages === 'string'
+          ? JSON.parse(programmingLanguages)
+          : programmingLanguages;
+      } catch (e) {
+        // If it's not valid JSON, treat it as a comma-separated string
+        parsedLanguages = programmingLanguages.split(',').map(lang => lang.trim());
+      }
+    }
+
+    // Parse frameworks if provided
+    if (frameworks) {
+      try {
+        parsedFrameworks = typeof frameworks === 'string'
+          ? JSON.parse(frameworks)
+          : frameworks;
+      } catch (e) {
+        parsedFrameworks = frameworks.split(',').map(framework => framework.trim());
+      }
+    }
+
+    // Parse tags if provided
+    if (tags) {
+      try {
+        parsedTags = typeof tags === 'string'
+          ? JSON.parse(tags)
+          : tags;
+      } catch (e) {
+        parsedTags = tags.split(',').map(tag => tag.trim());
+      }
+    }
+
+    // Parse code snippets if provided
+    if (codeSnippets) {
+      try {
+        parsedCodeSnippets = typeof codeSnippets === 'string'
+          ? JSON.parse(codeSnippets)
+          : codeSnippets;
+      } catch (e) {
+        console.error('Error parsing code snippets:', e);
+        parsedCodeSnippets = [];
+      }
+    }
+
+    // Parse resources if provided
+    if (resources) {
+      try {
+        parsedResources = typeof resources === 'string'
+          ? JSON.parse(resources)
+          : resources;
+      } catch (e) {
+        console.error('Error parsing resources:', e);
+        parsedResources = [];
+      }
+    }
+
     const video = new FreeVideo({
       title,
+      description: description || title, // Use title as description if not provided
       videoUrl: videoFile.path,
       thumbnailUrl: thumbnailFile.path,
       uploader,
-      uploaderId, // Store the uploader's ID
+      uploaderId,
       type: 'video',
+      programmingLanguages: parsedLanguages,
+      frameworks: parsedFrameworks,
+      difficultyLevel: difficultyLevel || 'beginner', // Default to beginner if not specified
+      codeSnippets: parsedCodeSnippets,
+      resources: parsedResources,
+      tags: parsedTags,
+      duration: duration || 0
     });
 
     await video.save();
@@ -79,20 +165,105 @@ router.post('/upload-video', protect, upload, async (req, res) => {
 });
 
 // Upload a free short
-router.post('/upload-short', protect, upload, async (req, res) => {
+router.post('/upload-short', protect, upload, validateCodingVideo, async (req, res) => {
   try {
-    const { title, uploader } = req.body;
+    const {
+      title,
+      uploader,
+      description,
+      programmingLanguages,
+      frameworks,
+      difficultyLevel,
+      codeSnippets,
+      resources,
+      tags,
+      duration
+    } = req.body;
+
     const videoFile = req.files.video[0];
     const thumbnailFile = req.files.thumbnail[0];
     const uploaderId = req.user._id; // Get the uploader's ID from the authenticated user
 
+    // Safely parse JSON strings with error handling
+    let parsedLanguages = [];
+    let parsedFrameworks = [];
+    let parsedTags = [];
+    let parsedCodeSnippets = [];
+    let parsedResources = [];
+
+    // Parse programming languages if provided
+    if (programmingLanguages) {
+      try {
+        parsedLanguages = typeof programmingLanguages === 'string'
+          ? JSON.parse(programmingLanguages)
+          : programmingLanguages;
+      } catch (e) {
+        // If it's not valid JSON, treat it as a comma-separated string
+        parsedLanguages = programmingLanguages.split(',').map(lang => lang.trim());
+      }
+    }
+
+    // Parse frameworks if provided
+    if (frameworks) {
+      try {
+        parsedFrameworks = typeof frameworks === 'string'
+          ? JSON.parse(frameworks)
+          : frameworks;
+      } catch (e) {
+        parsedFrameworks = frameworks.split(',').map(framework => framework.trim());
+      }
+    }
+
+    // Parse tags if provided
+    if (tags) {
+      try {
+        parsedTags = typeof tags === 'string'
+          ? JSON.parse(tags)
+          : tags;
+      } catch (e) {
+        parsedTags = tags.split(',').map(tag => tag.trim());
+      }
+    }
+
+    // Parse code snippets if provided
+    if (codeSnippets) {
+      try {
+        parsedCodeSnippets = typeof codeSnippets === 'string'
+          ? JSON.parse(codeSnippets)
+          : codeSnippets;
+      } catch (e) {
+        console.error('Error parsing code snippets:', e);
+        parsedCodeSnippets = [];
+      }
+    }
+
+    // Parse resources if provided
+    if (resources) {
+      try {
+        parsedResources = typeof resources === 'string'
+          ? JSON.parse(resources)
+          : resources;
+      } catch (e) {
+        console.error('Error parsing resources:', e);
+        parsedResources = [];
+      }
+    }
+
     const video = new FreeVideo({
       title,
+      description: description || title, // Use title as description if not provided
       videoUrl: videoFile.path,
       thumbnailUrl: thumbnailFile.path,
       uploader,
-      uploaderId, // Store the uploader's ID
+      uploaderId,
       type: 'short',
+      programmingLanguages: parsedLanguages,
+      frameworks: parsedFrameworks,
+      difficultyLevel: difficultyLevel || 'beginner', // Default to beginner if not specified
+      codeSnippets: parsedCodeSnippets,
+      resources: parsedResources,
+      tags: parsedTags,
+      duration: duration || 0
     });
 
     await video.save();

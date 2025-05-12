@@ -45,9 +45,16 @@ exports.subscribeToChannel = async (req, res) => {
     subscriber.subscriptions.push(channelId);
     await subscriber.save();
 
+    // Increment the channel owner's subscriber count
+    channelOwner.subscriberCount = (channelOwner.subscriberCount || 0) + 1;
+    await channelOwner.save();
+
+    console.log(`Incremented subscriber count for ${channelOwner.name} to ${channelOwner.subscriberCount}`);
+
     res.status(200).json({
       success: true,
-      message: 'Successfully subscribed to channel'
+      message: 'Successfully subscribed to channel',
+      subscriberCount: channelOwner.subscriberCount
     });
   } catch (error) {
     console.error('Error subscribing to channel:', error);
@@ -74,6 +81,15 @@ exports.unsubscribeFromChannel = async (req, res) => {
       });
     }
 
+    // Find the channel owner
+    const channelOwner = await User.findById(channelId);
+    if (!channelOwner) {
+      return res.status(404).json({
+        success: false,
+        message: 'Channel not found'
+      });
+    }
+
     // Check if subscribed
     if (!subscriber.subscriptions.includes(channelId)) {
       return res.status(400).json({
@@ -88,9 +104,16 @@ exports.unsubscribeFromChannel = async (req, res) => {
     );
     await subscriber.save();
 
+    // Decrement the channel owner's subscriber count (ensure it doesn't go below 0)
+    channelOwner.subscriberCount = Math.max(0, (channelOwner.subscriberCount || 0) - 1);
+    await channelOwner.save();
+
+    console.log(`Decremented subscriber count for ${channelOwner.name} to ${channelOwner.subscriberCount}`);
+
     res.status(200).json({
       success: true,
-      message: 'Successfully unsubscribed from channel'
+      message: 'Successfully unsubscribed from channel',
+      subscriberCount: channelOwner.subscriberCount
     });
   } catch (error) {
     console.error('Error unsubscribing from channel:', error);
@@ -145,11 +168,21 @@ exports.checkSubscription = async (req, res) => {
       });
     }
 
+    // Find the channel owner to get subscriber count
+    const channelOwner = await User.findById(channelId);
+    if (!channelOwner) {
+      return res.status(404).json({
+        success: false,
+        message: 'Channel not found'
+      });
+    }
+
     const isSubscribed = user.subscriptions.includes(channelId);
 
     res.status(200).json({
       success: true,
-      isSubscribed
+      isSubscribed,
+      subscriberCount: channelOwner.subscriberCount || 0
     });
   } catch (error) {
     console.error('Error checking subscription:', error);
@@ -166,14 +199,19 @@ exports.getSubscriberCount = async (req, res) => {
   try {
     const { channelId } = req.params;
 
-    // Count users who have this channel in their subscriptions
-    const subscriberCount = await User.countDocuments({
-      subscriptions: channelId
-    });
+    // Find the channel owner
+    const channelOwner = await User.findById(channelId);
+    if (!channelOwner) {
+      return res.status(404).json({
+        success: false,
+        message: 'Channel not found'
+      });
+    }
 
+    // Return the subscriber count from the user document
     res.status(200).json({
       success: true,
-      subscriberCount
+      subscriberCount: channelOwner.subscriberCount || 0
     });
   } catch (error) {
     console.error('Error getting subscriber count:', error);

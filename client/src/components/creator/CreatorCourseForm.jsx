@@ -61,16 +61,16 @@ const CreatorCourseForm = ({ editMode, editCourseId, initialData, onSuccess }) =
     if (e.target.files.length > 0) {
       const newFiles = Array.from(e.target.files);
       setVideoFiles([...videoFiles, ...newFiles]);
-      
+
       // Initialize titles and descriptions for new videos
       const newTitles = [...videoTitles];
       const newDescriptions = [...videoDescriptions];
-      
+
       newFiles.forEach(() => {
         newTitles.push("");
         newDescriptions.push("");
       });
-      
+
       setVideoTitles(newTitles);
       setVideoDescriptions(newDescriptions);
     }
@@ -100,14 +100,14 @@ const CreatorCourseForm = ({ editMode, editCourseId, initialData, onSuccess }) =
     const newThumbnailFiles = [...thumbnailFiles];
     const newVideoTitles = [...videoTitles];
     const newVideoDescriptions = [...videoDescriptions];
-    
+
     newVideoFiles.splice(index, 1);
     if (newThumbnailFiles[index]) {
       newThumbnailFiles.splice(index, 1);
     }
     newVideoTitles.splice(index, 1);
     newVideoDescriptions.splice(index, 1);
-    
+
     setVideoFiles(newVideoFiles);
     setThumbnailFiles(newThumbnailFiles);
     setVideoTitles(newVideoTitles);
@@ -116,7 +116,7 @@ const CreatorCourseForm = ({ editMode, editCourseId, initialData, onSuccess }) =
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!courseData.title || !courseData.description || !courseData.price || !courseData.instructor || !courseData.duration || !courseData.category) {
       toast.error("Please fill in all required fields");
       return;
@@ -139,7 +139,7 @@ const CreatorCourseForm = ({ editMode, editCourseId, initialData, onSuccess }) =
     }
 
     setVideoLoading(true);
-    
+
     try {
       const formData = new FormData();
       formData.append("title", courseData.title);
@@ -148,31 +148,31 @@ const CreatorCourseForm = ({ editMode, editCourseId, initialData, onSuccess }) =
       formData.append("instructor", courseData.instructor);
       formData.append("duration", courseData.duration);
       formData.append("category", courseData.category);
-      
+
       // Append payment options
       Object.keys(courseData.paymentOptions).forEach(key => {
         formData.append(`paymentOptions[${key}]`, courseData.paymentOptions[key]);
       });
-      
+
       // Append course image if available
       if (courseData.image instanceof File) {
         formData.append("image", courseData.image);
       }
-      
+
       // Append videos and their details
       videoFiles.forEach((file, index) => {
         formData.append("videos", file);
         formData.append("videoTitles", videoTitles[index] || "");
         formData.append("videoDescriptions", videoDescriptions[index] || "");
       });
-      
+
       // Append thumbnails if available
       thumbnailFiles.forEach(file => {
         formData.append("thumbnails", file);
       });
-      
+
       let response;
-      
+
       if (editMode) {
         response = await axios.put(`${API_URL}/api/creator/courses/${editCourseId}`, formData, {
           headers: { "Content-Type": "multipart/form-data" },
@@ -194,7 +194,7 @@ const CreatorCourseForm = ({ editMode, editCourseId, initialData, onSuccess }) =
         });
         toast.success("Course Created Successfully!");
       }
-      
+
       // Reset form
       setCourseData({
         title: "",
@@ -218,7 +218,7 @@ const CreatorCourseForm = ({ editMode, editCourseId, initialData, onSuccess }) =
       setVideoDescriptions([]);
       setActiveTab("courseInfo");
       setUploadProgress(0);
-      
+
       // Call success callback
       if (onSuccess) {
         onSuccess(response.data.course);
@@ -237,8 +237,8 @@ const CreatorCourseForm = ({ editMode, editCourseId, initialData, onSuccess }) =
       {videoLoading && (
         <div className="mb-4">
           <div className="w-full bg-gray-700 rounded-full h-2.5">
-            <div 
-              className="bg-blue-600 h-2.5 rounded-full" 
+            <div
+              className="bg-blue-600 h-2.5 rounded-full"
               style={{ width: `${uploadProgress}%` }}
             ></div>
           </div>
@@ -253,7 +253,7 @@ const CreatorCourseForm = ({ editMode, editCourseId, initialData, onSuccess }) =
         {activeTab === "courseInfo" && (
           <div>
             <h3 className="text-xl font-semibold mb-4 text-white">Course Information</h3>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
               <div>
                 <label className="block text-gray-300 mb-2">Title</label>
@@ -266,7 +266,7 @@ const CreatorCourseForm = ({ editMode, editCourseId, initialData, onSuccess }) =
                   placeholder="Course Title"
                 />
               </div>
-              
+
               <div>
                 <label className="block text-gray-300 mb-2">Price (PKR)</label>
                 <input
@@ -280,7 +280,7 @@ const CreatorCourseForm = ({ editMode, editCourseId, initialData, onSuccess }) =
                 />
               </div>
             </div>
-            
+
             <div className="mb-4">
               <label className="block text-gray-300 mb-2">Description</label>
               <textarea
@@ -292,7 +292,7 @@ const CreatorCourseForm = ({ editMode, editCourseId, initialData, onSuccess }) =
                 rows="4"
               ></textarea>
             </div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
               <div>
                 <label className="block text-gray-300 mb-2">Instructor</label>
@@ -305,7 +305,7 @@ const CreatorCourseForm = ({ editMode, editCourseId, initialData, onSuccess }) =
                   placeholder="Instructor Name"
                 />
               </div>
-              
+
               <div>
                 <label className="block text-gray-300 mb-2">Duration</label>
                 <input
@@ -317,7 +317,7 @@ const CreatorCourseForm = ({ editMode, editCourseId, initialData, onSuccess }) =
                   placeholder="e.g., 10 hours"
                 />
               </div>
-              
+
               <div>
                 <label className="block text-gray-300 mb-2">Category</label>
                 <select
@@ -339,7 +339,7 @@ const CreatorCourseForm = ({ editMode, editCourseId, initialData, onSuccess }) =
                 </select>
               </div>
             </div>
-            
+
             <div className="mb-4">
               <label className="block text-gray-300 mb-2">Course Thumbnail</label>
               <div className="flex items-center">
@@ -360,8 +360,8 @@ const CreatorCourseForm = ({ editMode, editCourseId, initialData, onSuccess }) =
                 />
                 {courseData.image && (
                   <span className="ml-3 text-green-500">
-                    {courseData.image instanceof File 
-                      ? courseData.image.name 
+                    {courseData.image instanceof File
+                      ? courseData.image.name
                       : "Current image will be kept"}
                   </span>
                 )}
@@ -369,12 +369,12 @@ const CreatorCourseForm = ({ editMode, editCourseId, initialData, onSuccess }) =
             </div>
           </div>
         )}
-        
+
         {/* Videos Tab */}
         {activeTab === "videos" && (
           <div>
             <h3 className="text-xl font-semibold mb-4 text-white">Course Videos</h3>
-            
+
             <div className="mb-6">
               <button
                 type="button"
@@ -393,7 +393,7 @@ const CreatorCourseForm = ({ editMode, editCourseId, initialData, onSuccess }) =
                 multiple
               />
             </div>
-            
+
             <div className="mb-6">
               <button
                 type="button"
@@ -415,7 +415,7 @@ const CreatorCourseForm = ({ editMode, editCourseId, initialData, onSuccess }) =
                 Upload thumbnails in the same order as videos. If you don't upload thumbnails, videos will use the first frame as thumbnail.
               </p>
             </div>
-            
+
             {videoFiles.length > 0 ? (
               <div className="space-y-4">
                 <h4 className="text-lg font-medium text-white">Videos to Upload</h4>
@@ -431,7 +431,7 @@ const CreatorCourseForm = ({ editMode, editCourseId, initialData, onSuccess }) =
                         <FaTrash />
                       </button>
                     </div>
-                    
+
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-2">
                       <div>
                         <label className="block text-gray-300 mb-1">Video Title</label>
@@ -443,17 +443,17 @@ const CreatorCourseForm = ({ editMode, editCourseId, initialData, onSuccess }) =
                           placeholder="Video Title"
                         />
                       </div>
-                      
+
                       <div>
                         <label className="block text-gray-300 mb-1">Thumbnail</label>
                         <span className="text-gray-400">
-                          {thumbnailFiles[index] 
-                            ? thumbnailFiles[index].name 
+                          {thumbnailFiles[index]
+                            ? thumbnailFiles[index].name
                             : "No thumbnail selected"}
                         </span>
                       </div>
                     </div>
-                    
+
                     <div>
                       <label className="block text-gray-300 mb-1">Video Description</label>
                       <textarea
@@ -475,13 +475,13 @@ const CreatorCourseForm = ({ editMode, editCourseId, initialData, onSuccess }) =
             )}
           </div>
         )}
-        
+
         {/* Payment Tab */}
         {activeTab === "payment" && (
           <div>
             <h3 className="text-xl font-semibold mb-4 text-white">Payment Options</h3>
             <p className="text-gray-400 mb-4">Select the payment methods you want to accept for this course:</p>
-            
+
             <div className="space-y-3">
               <div className="flex items-center">
                 <input
@@ -497,7 +497,7 @@ const CreatorCourseForm = ({ editMode, editCourseId, initialData, onSuccess }) =
                   JazzCash
                 </label>
               </div>
-              
+
               <div className="flex items-center">
                 <input
                   type="checkbox"
@@ -512,7 +512,7 @@ const CreatorCourseForm = ({ editMode, editCourseId, initialData, onSuccess }) =
                   EasyPaisa
                 </label>
               </div>
-              
+
               <div className="flex items-center">
                 <input
                   type="checkbox"
@@ -527,7 +527,7 @@ const CreatorCourseForm = ({ editMode, editCourseId, initialData, onSuccess }) =
                   PayFast
                 </label>
               </div>
-              
+
               <div className="flex items-center">
                 <input
                   type="checkbox"
@@ -543,7 +543,7 @@ const CreatorCourseForm = ({ editMode, editCourseId, initialData, onSuccess }) =
                 </label>
               </div>
             </div>
-            
+
             <div className="mt-6 p-4 bg-gray-800 rounded-md">
               <h4 className="text-white font-medium mb-2 flex items-center">
                 <FaMoneyBillWave className="text-green-500 mr-2" />
@@ -568,7 +568,7 @@ const CreatorCourseForm = ({ editMode, editCourseId, initialData, onSuccess }) =
             </div>
           </div>
         )}
-        
+
         {/* Navigation and Submit Buttons */}
         <div className="flex justify-between mt-6">
           <div>

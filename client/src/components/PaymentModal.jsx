@@ -29,24 +29,41 @@ const PaymentModal = ({ isOpen, onClose, course }) => {
     setIsProcessing(true);
 
     try {
-      // For testing purposes, we'll directly process the course purchase
-      // without going through the actual payment gateway
+      // For now, we'll directly process the course purchase
+      // In production, this would connect to actual payment gateways
       const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+
+      // Show processing message
+      toast.info(`Processing payment via ${selectedGateway === 'jazzCash' ? 'JazzCash' :
+        selectedGateway === 'easyPaisa' ? 'EasyPaisa' :
+          selectedGateway === 'payFast' ? 'PayFast' : 'Bank Transfer'
+        }...`);
 
       // Simulate payment processing delay
       await new Promise(resolve => setTimeout(resolve, 1500));
 
       // Add course to user's purchased courses
-      await axios.post(
+      const response = await axios.post(
         `${API_URL}/api/student/purchase-course/${course._id}`,
         {},
         { withCredentials: true }
       );
 
-      toast.success("Course purchased successfully!");
+      if (response.data.success) {
+        toast.success("Course purchased successfully!");
 
-      // Redirect to course videos page
-      navigate(`/course-videos/${course._id}`);
+        // Show additional information based on payment method
+        if (selectedGateway === 'bankTransfer') {
+          toast.info("Bank transfer details have been sent to your email.");
+        } else {
+          toast.info("You can now access your course in your learning dashboard.");
+        }
+
+        // Redirect to course videos page
+        navigate(`/course-videos/${course._id}`);
+      } else {
+        toast.error(response.data.message || "Payment failed. Please try again.");
+      }
     } catch (error) {
       console.error("Error processing payment:", error);
 
@@ -57,7 +74,7 @@ const PaymentModal = ({ isOpen, onClose, course }) => {
         toast.info("You've already purchased this course");
         navigate(`/course-videos/${course._id}`);
       } else {
-        toast.error("Payment failed. Please try again.");
+        toast.error(error.response?.data?.message || "Payment failed. Please try again.");
       }
     } finally {
       setIsProcessing(false);
@@ -171,9 +188,16 @@ const PaymentModal = ({ isOpen, onClose, course }) => {
           <button
             onClick={handlePurchase}
             disabled={isProcessing}
-            className={`${isProcessing ? 'bg-gray-600' : 'bg-green-600 hover:bg-green-700'} text-white px-6 py-2 rounded flex items-center`}
+            className={`${isProcessing ? 'bg-gray-600' : 'bg-green-600 hover:bg-green-700'} text-white px-6 py-2 rounded flex items-center shadow-md`}
           >
-            {isProcessing ? 'Processing...' : 'Pay Now'}
+            {isProcessing ? (
+              <>
+                <span className="mr-2">Processing...</span>
+                <div className="animate-spin h-5 w-5 border-2 border-white rounded-full border-t-transparent"></div>
+              </>
+            ) : (
+              <>Pay Now</>
+            )}
           </button>
         </div>
       </div>

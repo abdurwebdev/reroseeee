@@ -17,8 +17,7 @@ import PaymentSuccess from "./pages/PaymentSuccess";
 import LMSPage from "./pages/LMSPage";
 import Feed from "./pages/Feed";
 import Watch from "./pages/Watch";
-import UploadVideo from "./pages/UploadVideo"; // New page for video uploads
-import UploadShort from "./pages/UploadShort"; // New page for short uploads
+// Regular upload pages removed as they're not needed
 import History from "./pages/History"; // Watch history page
 import WatchLater from "./pages/WatchLater"; // Watch later page
 import LikedVideos from "./pages/LikedVideos"; // Liked videos page
@@ -57,6 +56,13 @@ import CreatorCourseDashboard from "./components/studio/CreatorCourseDashboard";
 import AdminCourseReviewDashboard from "./components/admin/AdminCourseReviewDashboard";
 import Messaging from "./pages/Messaging";
 import AuthSuccess from "./pages/AuthSuccess";
+import CoderVerification from "./pages/CoderVerification";
+import UploadCodingVideo from "./pages/UploadCodingVideo";
+import UploadCodingShort from "./pages/UploadCodingShort";
+import CodingVideoFeed from "./pages/CodingVideoFeed";
+import CodingVideoWatch from "./pages/CodingVideoWatch";
+import AdminCoderVerificationDashboard from "./pages/AdminCoderVerificationDashboard";
+
 function App() {
   return (
     <BrowserRouter>
@@ -91,8 +97,7 @@ function App() {
           <Route path="/lms" element={<LMSPage />} />
           <Route path="/feed" element={<Feed />} />
           <Route path="/watch/:id" element={<Watch />} />
-          <Route path="/upload-video" element={<UploadVideo />} />
-          <Route path="/upload-short" element={<UploadShort />} />
+          {/* Regular upload routes removed as they're not needed */}
           <Route path="/profile-setup" element={<ProfileSetup />} />
           <Route path="/admindashboard/user-admin-dashboard" element={<AdminUserDashboard />} />
           <Route path="/admindashboard/video-admin-dashboard" element={<AdminVideoDashboard />} />
@@ -134,8 +139,16 @@ function App() {
 
           {/* Admin Course Review Route */}
           <Route path="/admindashboard/course-review" element={<AdminCourseReviewDashboard />} />
+          <Route path="/admindashboard/coder-verification" element={<AdminCoderVerificationDashboard />} />
           <Route path="/messages" element={<Messaging />} />
           <Route path="/auth-success" element={<AuthSuccess />} />
+
+          {/* Professional Coder Routes */}
+          <Route path="/coder-verification" element={<CoderVerification />} />
+          <Route path="/upload-coding-video" element={<UploadCodingVideo />} />
+          <Route path="/upload-coding-short" element={<UploadCodingShort />} />
+          <Route path="/coding-videos" element={<CodingVideoFeed />} />
+          <Route path="/coding-videos/:id" element={<CodingVideoWatch />} />
         </Routes>
       </SocketProvider>
     </BrowserRouter>

@@ -55,6 +55,7 @@ const FeedSidebar = ({ user, subscriptions = [] }) => {
     { path: '/studio', icon: <FaVideo className="text-xl" />, label: 'Rerose Studio' },
     { path: '/music', icon: <FaMusic className="text-xl" />, label: 'Rerose Music' },
     { path: '/kids', icon: <FaChild className="text-xl" />, label: 'Rerose Kids' },
+    { path: '/coding-videos', icon: <FaCode className="text-xl" />, label: 'Coding Videos' },
   ];
 
   // Settings and help items

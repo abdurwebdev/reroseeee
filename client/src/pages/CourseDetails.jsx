@@ -186,44 +186,10 @@ const CourseDetail = () => {
           <div className="mt-10 flex gap-4">
             <button
               onClick={handleBuyNow}
-              className="bg-green-500 text-black text-lg font-semibold px-6 py-3 rounded-lg hover:bg-green-400 transition"
+              className="bg-green-500 text-black text-lg font-semibold px-10 py-4 rounded-lg hover:bg-green-400 transition shadow-lg"
             >
               {hasPurchased ? "Go to Course" : "Buy Now"}
             </button>
-
-            {/* Test button for direct purchase */}
-            {!hasPurchased && (
-              <button
-                onClick={() => {
-                  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
-
-                  // Direct purchase without payment modal
-                  if (user) {
-                    toast.info("Processing direct purchase...");
-
-                    axios.post(
-                      `${API_URL}/api/student/purchase-course/${course._id}`,
-                      {},
-                      { withCredentials: true }
-                    )
-                      .then(() => {
-                        toast.success("Course purchased successfully!");
-                        navigate(`/course-videos/${course._id}`);
-                      })
-                      .catch(error => {
-                        console.error("Error:", error);
-                        toast.error("Purchase failed. Please try again.");
-                      });
-                  } else {
-                    toast.error("Please login to purchase this course");
-                    navigate("/login");
-                  }
-                }}
-                className="bg-blue-500 text-white text-lg font-semibold px-6 py-3 rounded-lg hover:bg-blue-400 transition"
-              >
-                Quick Purchase (Test)
-              </button>
-            )}
           </div>
         </div>
 
@@ -315,44 +281,10 @@ const CourseDetail = () => {
           <div className="flex gap-2">
             <button
               onClick={handleBuyNow}
-              className="bg-green-500 px-6 py-3 rounded-md text-black font-semibold hover:bg-green-400 transition"
+              className="bg-green-500 px-6 py-3 rounded-md text-black font-semibold hover:bg-green-400 transition shadow-lg"
             >
               {hasPurchased ? "Go to Course" : "Buy Now"}
             </button>
-
-            {/* Test button for direct purchase */}
-            {!hasPurchased && (
-              <button
-                onClick={() => {
-                  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
-
-                  // Direct purchase without payment modal
-                  if (user) {
-                    toast.info("Processing direct purchase...");
-
-                    axios.post(
-                      `${API_URL}/api/student/purchase-course/${course._id}`,
-                      {},
-                      { withCredentials: true }
-                    )
-                      .then(() => {
-                        toast.success("Course purchased successfully!");
-                        navigate(`/course-videos/${course._id}`);
-                      })
-                      .catch(error => {
-                        console.error("Error:", error);
-                        toast.error("Purchase failed. Please try again.");
-                      });
-                  } else {
-                    toast.error("Please login to purchase this course");
-                    navigate("/login");
-                  }
-                }}
-                className="bg-blue-500 px-6 py-3 rounded-md text-white font-semibold hover:bg-blue-400 transition"
-              >
-                Quick Buy (Test)
-              </button>
-            )}
           </div>
         </div>
       </div>

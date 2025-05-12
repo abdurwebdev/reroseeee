@@ -157,14 +157,28 @@ const StudioDashboard = () => {
             </div>
             <div>
               <h3 className="text-gray-400 text-sm">Earnings (30 days)</h3>
-              <p className="text-2xl font-bold">{formatCurrency(dashboardData?.recentEarnings?.totalAmount || 0)}</p>
+              {dashboardData?.channel?.isMonetized &&
+                (dashboardData?.channel?.subscriberCount >= 1000) &&
+                ((dashboardData?.analytics?.totalWatchTimeMinutes >= 240000) ||
+                  (dashboardData?.channel?.totalShortViews >= 10000000)) ? (
+                <p className="text-2xl font-bold">{formatCurrency(dashboardData?.recentEarnings?.totalAmount || 0)}</p>
+              ) : (
+                <p className="text-2xl font-bold">--</p>
+              )}
             </div>
           </div>
           <div className="text-gray-400 text-sm">
-            {dashboardData?.channel?.isMonetized ?
-              <span className="text-green-400">Channel is monetized</span> :
+            {dashboardData?.channel?.isMonetized ? (
+              (dashboardData?.channel?.subscriberCount >= 1000) &&
+                ((dashboardData?.analytics?.totalWatchTimeMinutes >= 240000) ||
+                  (dashboardData?.channel?.totalShortViews >= 10000000)) ? (
+                <span className="text-green-400">Channel is monetized</span>
+              ) : (
+                <span className="text-yellow-400">Meet requirements to view earnings</span>
+              )
+            ) : (
               <span>Not monetized yet</span>
-            }
+            )}
           </div>
         </div>
       </div>
@@ -178,8 +192,8 @@ const StudioDashboard = () => {
             <p className="text-lg">
               Status:
               <span className={`ml-2 font-semibold ${dashboardData?.channel?.monetizationStatus === 'approved' ? 'text-green-400' :
-                  dashboardData?.channel?.monetizationStatus === 'under_review' ? 'text-yellow-400' :
-                    'text-gray-400'
+                dashboardData?.channel?.monetizationStatus === 'under_review' ? 'text-yellow-400' :
+                  'text-gray-400'
                 }`}>
                 {dashboardData?.channel?.monetizationStatus === 'approved' ? 'Approved' :
                   dashboardData?.channel?.monetizationStatus === 'under_review' ? 'Under Review' :
@@ -323,7 +337,7 @@ const StudioDashboard = () => {
                     <h3 className="font-medium truncate">{stream.name}</h3>
                     <div className="flex items-center text-sm text-gray-400 mt-1">
                       <span className={`mr-3 ${stream.status === 'active' ? 'text-green-500' :
-                          stream.status === 'ended' ? 'text-gray-400' : 'text-yellow-500'
+                        stream.status === 'ended' ? 'text-gray-400' : 'text-yellow-500'
                         }`}>
                         {stream.status === 'active' ? 'Live' :
                           stream.status === 'ended' ? 'Ended' : 'Idle'}

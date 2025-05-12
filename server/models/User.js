@@ -16,7 +16,7 @@ const UserSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true },
   password: { type: String },
   googleId: { type: String },
-  role: { type: String, enum: ['admin', 'student', 'creator'], default: 'student' }, // Added 'creator' role
+  role: { type: String, enum: ['admin', 'student', 'creator', 'professional_coder'], default: 'student' }, // Added 'professional_coder' role
   purchasedCourses: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Course' }],
   profileImageUrl: { type: String }, // Optional profile image
   bannerImageUrl: { type: String }, // Channel banner image
@@ -68,7 +68,30 @@ const UserSchema = new mongoose.Schema({
   totalEarnings: { type: Number, default: 0 }, // Total lifetime earnings
   pendingPayout: { type: Number, default: 0 }, // Amount pending for payout
   lastPayoutDate: { type: Date }, // Date of last payout
-  lastPayoutAmount: { type: Number } // Amount of last payout
+  lastPayoutAmount: { type: Number }, // Amount of last payout
+
+  // Professional Coder specific fields
+  coderVerificationStatus: {
+    type: String,
+    enum: ['not_applied', 'under_review', 'approved', 'rejected'],
+    default: 'not_applied'
+  },
+  coderVerificationDate: { type: Date }, // When the coder was verified
+  programmingLanguages: [{ type: String }], // Languages the coder is proficient in
+  yearsOfExperience: { type: Number }, // Years of coding experience
+  githubProfile: { type: String }, // GitHub profile URL
+  stackOverflowProfile: { type: String }, // StackOverflow profile URL
+  linkedInProfile: { type: String }, // LinkedIn profile URL
+  portfolioWebsite: { type: String }, // Personal portfolio website
+  certifications: [{
+    name: { type: String },
+    issuer: { type: String },
+    year: { type: Number },
+    verificationUrl: { type: String }
+  }], // Professional certifications
+  codeSnippetSubmission: { type: String }, // Code snippet submitted for verification
+  technicalAssessmentScore: { type: Number }, // Score from technical assessment
+  specializations: [{ type: String }] // Areas of specialization (web dev, mobile, AI, etc.)
 });
 
 module.exports = mongoose.model('User', UserSchema);

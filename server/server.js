@@ -28,6 +28,8 @@ const withdrawalRoutes = require('./routes/withdrawalRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
 const messageRoutes = require('./routes/messageRoutes');
 const creatorCourseRoutes = require('./routes/creatorCourseRoutes');
+const codingVideoRoutes = require('./routes/codingVideoRoutes');
+const coderVerificationRoutes = require('./routes/coderVerificationRoutes');
 dotenv.config();
 connectDB();
 
@@ -76,6 +78,8 @@ app.use('/api/withdrawals', withdrawalRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/messages', messageRoutes);
 app.use('/api/creator/courses', creatorCourseRoutes);
+app.use('/api/coding-videos', codingVideoRoutes);
+app.use('/api/coder', coderVerificationRoutes);
 // Protected route for testing auth middleware
 app.get(
   "/api/protected",

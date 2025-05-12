@@ -82,6 +82,8 @@ export default function Navbar() {
       await axiosInstance.post('/api/auth/logout');
       // Clear user data from localStorage
       localStorage.removeItem("user");
+      // Clear token
+      localStorage.removeItem("token");
       // Reset notification initialization state
       localStorage.removeItem("notificationsInitialized");
       setUser(null);
@@ -94,6 +96,8 @@ export default function Navbar() {
       console.error("Logout failed", error);
       // Still clear localStorage even if server request fails
       localStorage.removeItem("user");
+      // Clear token
+      localStorage.removeItem("token");
       // Reset notification initialization state
       localStorage.removeItem("notificationsInitialized");
       setUser(null);
@@ -195,6 +199,32 @@ export default function Navbar() {
                     className="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded text-white transition mb-2"
                   >
                     Creator Studio
+                  </Link>
+                )}
+                {user.role === 'professional_coder' ? (
+                  <>
+                    <Link
+                      to="/coding-videos"
+                      onClick={closeMenu}
+                      className="bg-green-600 hover:bg-green-700 px-4 py-2 rounded text-white transition mb-2"
+                    >
+                      Coding Videos
+                    </Link>
+                    <Link
+                      to="/upload-coding-video"
+                      onClick={closeMenu}
+                      className="bg-green-600 hover:bg-green-700 px-4 py-2 rounded text-white transition mb-2"
+                    >
+                      Upload Coding Video
+                    </Link>
+                  </>
+                ) : (
+                  <Link
+                    to="/coder-verification"
+                    onClick={closeMenu}
+                    className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded text-white transition mb-2"
+                  >
+                    Become a Professional Coder
                   </Link>
                 )}
                 <button
@@ -324,6 +354,32 @@ export default function Navbar() {
                         onClick={() => setShowProfileMenu(false)}
                       >
                         Creator Studio
+                      </Link>
+                    )}
+                    {user.role === 'professional_coder' ? (
+                      <>
+                        <Link
+                          to="/coding-videos"
+                          className="block p-3 hover:bg-gray-800"
+                          onClick={() => setShowProfileMenu(false)}
+                        >
+                          Coding Videos
+                        </Link>
+                        <Link
+                          to="/upload-coding-video"
+                          className="block p-3 hover:bg-gray-800"
+                          onClick={() => setShowProfileMenu(false)}
+                        >
+                          Upload Coding Video
+                        </Link>
+                      </>
+                    ) : (
+                      <Link
+                        to="/coder-verification"
+                        className="block p-3 hover:bg-gray-800"
+                        onClick={() => setShowProfileMenu(false)}
+                      >
+                        Become a Professional Coder
                       </Link>
                     )}
                     <button

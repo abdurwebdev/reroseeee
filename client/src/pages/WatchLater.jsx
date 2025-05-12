@@ -20,14 +20,14 @@ const WatchLater = () => {
   // Check if user is logged in
   useEffect(() => {
     const storedUser = JSON.parse(localStorage.getItem("user"));
-    
+
     if (!storedUser) {
       navigate('/login');
       return;
     }
-    
+
     setUser(storedUser);
-    
+
     // Fetch user's watch later list
     const fetchWatchLater = async () => {
       try {
@@ -35,7 +35,7 @@ const WatchLater = () => {
         const res = await axios.get(`${API_URL}/api/library/watch-later`, {
           withCredentials: true
         });
-        
+
         if (res.data.success) {
           setWatchLater(res.data.watchLater);
         }
@@ -46,14 +46,14 @@ const WatchLater = () => {
         setLoading(false);
       }
     };
-    
+
     // Fetch user subscriptions
     const fetchSubscriptions = async () => {
       try {
         const res = await axios.get(`${API_URL}/api/subscriptions/my-subscriptions`, {
           withCredentials: true,
         });
-        
+
         if (res.data.success) {
           setSubscriptions(res.data.subscriptions || []);
         }
@@ -61,11 +61,11 @@ const WatchLater = () => {
         console.error("Failed to fetch subscriptions:", err);
       }
     };
-    
+
     fetchWatchLater();
     fetchSubscriptions();
   }, [navigate]);
-  
+
   // Format date
   const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -75,14 +75,14 @@ const WatchLater = () => {
       year: 'numeric'
     });
   };
-  
+
   // Remove a video from watch later
   const removeFromWatchLater = async (videoId) => {
     try {
       await axios.delete(`${API_URL}/api/library/watch-later/${videoId}`, {
         withCredentials: true
       });
-      
+
       // Update local state
       setWatchLater(prev => prev.filter(item => item.video._id !== videoId));
       showSuccessToast('Video removed from Watch Later');
@@ -91,18 +91,18 @@ const WatchLater = () => {
       showErrorToast('Failed to remove video from Watch Later');
     }
   };
-  
+
   // Clear entire watch later list
   const clearWatchLater = async () => {
     if (!window.confirm('Are you sure you want to clear your entire Watch Later list?')) {
       return;
     }
-    
+
     try {
       await axios.delete(`${API_URL}/api/library/watch-later`, {
         withCredentials: true
       });
-      
+
       setWatchLater([]);
       showSuccessToast('Watch Later list cleared');
     } catch (err) {
@@ -110,22 +110,22 @@ const WatchLater = () => {
       showErrorToast('Failed to clear Watch Later list');
     }
   };
-  
+
   // Filter watch later based on search term
-  const filteredWatchLater = watchLater.filter(item => 
+  const filteredWatchLater = watchLater.filter(item =>
     item.video && item.video.title.toLowerCase().includes(searchTerm.toLowerCase())
   );
-  
+
   return (
     <div className="min-h-screen bg-[#000000] text-white">
       <Navbar />
-      
+
       <div className="flex flex-col md:flex-row">
         {/* Sidebar - hidden on mobile, shown on larger screens */}
         <div className="hidden md:block md:w-64 lg:w-72 h-[calc(100vh-64px)] sticky top-16 overflow-y-auto">
           <FeedSidebar user={user} subscriptions={subscriptions} />
         </div>
-        
+
         {/* Main content */}
         <div className="flex-1 p-4">
           <div className="max-w-5xl mx-auto">
@@ -133,9 +133,9 @@ const WatchLater = () => {
               <h1 className="text-2xl font-bold flex items-center">
                 <FaClock className="mr-2" /> Watch Later
               </h1>
-              
+
               {watchLater.length > 0 && (
-                <button 
+                <button
                   onClick={clearWatchLater}
                   className="flex items-center px-3 py-1 bg-red-600 hover:bg-red-700 rounded-lg text-sm"
                 >
@@ -143,7 +143,7 @@ const WatchLater = () => {
                 </button>
               )}
             </div>
-            
+
             {/* Search */}
             <div className="mb-6">
               <div className="relative">
@@ -157,7 +157,7 @@ const WatchLater = () => {
                 <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" />
               </div>
             </div>
-            
+
             {loading ? (
               <div className="text-center py-10">
                 <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-white mx-auto"></div>
@@ -187,16 +187,16 @@ const WatchLater = () => {
                   <div key={item._id} className="bg-[#111111] rounded-lg overflow-hidden hover:bg-gray-800 transition-colors">
                     <Link to={`/watch/${item.video._id}`} className="block">
                       <div className="relative">
-                        <img 
-                          src={item.video.thumbnailUrl} 
-                          alt={item.video.title} 
+                        <img
+                          src={item.video.thumbnailUrl}
+                          alt={item.video.title}
                           className="w-full h-48 object-cover"
                         />
                         <div className="absolute bottom-2 right-2 bg-black bg-opacity-70 px-2 py-1 text-xs rounded">
                           Added {formatDate(item.addedAt)}
                         </div>
                       </div>
-                      
+
                       <div className="p-3">
                         <h3 className="font-medium text-lg line-clamp-2">{item.video.title}</h3>
                         <div className="flex items-center text-sm text-gray-400 mt-1">
@@ -206,9 +206,9 @@ const WatchLater = () => {
                         </div>
                       </div>
                     </Link>
-                    
+
                     <div className="px-3 pb-3 flex justify-end">
-                      <button 
+                      <button
                         onClick={() => removeFromWatchLater(item.video._id)}
                         className="text-gray-400 hover:text-red-500"
                         title="Remove from Watch Later"

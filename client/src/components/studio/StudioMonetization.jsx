@@ -315,86 +315,108 @@ const StudioMonetization = () => {
       )}
 
       {/* Earnings Summary */}
-      {monetizationStatus.status === 'approved' && (
-        <div className="bg-gray-800 rounded-lg p-6 mb-8">
-          <h2 className="text-xl font-bold mb-4">Earnings Summary</h2>
+      {monetizationStatus.status === 'approved' &&
+        monetizationStatus.requirements.subscribers.met &&
+        (monetizationStatus.requirements.watchTime.met || monetizationStatus.requirements.shortViews.met) && (
+          <div className="bg-gray-800 rounded-lg p-6 mb-8">
+            <h2 className="text-xl font-bold mb-4">Earnings Summary</h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-            <div className="bg-gray-900 p-4 rounded-lg">
-              <div className="flex items-center mb-2">
-                <FaMoneyBillWave className="text-green-500 mr-2" />
-                <span>30-Day Earnings</span>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+              <div className="bg-gray-900 p-4 rounded-lg">
+                <div className="flex items-center mb-2">
+                  <FaMoneyBillWave className="text-green-500 mr-2" />
+                  <span>30-Day Earnings</span>
+                </div>
+                <p className="text-2xl font-bold">{formatCurrency(earnings.summary.total.creatorTotal)}</p>
               </div>
-              <p className="text-2xl font-bold">{formatCurrency(earnings.summary.total.creatorTotal)}</p>
+
+              <div className="bg-gray-900 p-4 rounded-lg">
+                <div className="flex items-center mb-2">
+                  <FaMoneyBillWave className="text-yellow-500 mr-2" />
+                  <span>Pending Payout</span>
+                </div>
+                <p className="text-2xl font-bold">{formatCurrency(earnings.pendingPayout)}</p>
+              </div>
+
+              <div className="bg-gray-900 p-4 rounded-lg">
+                <div className="flex items-center mb-2">
+                  <FaMoneyBillWave className="text-blue-500 mr-2" />
+                  <span>Lifetime Earnings</span>
+                </div>
+                <p className="text-2xl font-bold">{formatCurrency(user.totalEarnings)}</p>
+              </div>
             </div>
 
-            <div className="bg-gray-900 p-4 rounded-lg">
-              <div className="flex items-center mb-2">
-                <FaMoneyBillWave className="text-yellow-500 mr-2" />
-                <span>Pending Payout</span>
-              </div>
-              <p className="text-2xl font-bold">{formatCurrency(earnings.pendingPayout)}</p>
-            </div>
-
-            <div className="bg-gray-900 p-4 rounded-lg">
-              <div className="flex items-center mb-2">
-                <FaMoneyBillWave className="text-blue-500 mr-2" />
-                <span>Lifetime Earnings</span>
-              </div>
-              <p className="text-2xl font-bold">{formatCurrency(user.totalEarnings)}</p>
-            </div>
-          </div>
-
-          {/* Earnings by source */}
-          <h3 className="text-lg font-semibold mb-3">Earnings by Source</h3>
-          <div className="bg-gray-900 rounded-lg overflow-hidden mb-6">
-            <table className="w-full">
-              <thead>
-                <tr className="bg-gray-800">
-                  <th className="px-4 py-3 text-left">Source</th>
-                  <th className="px-4 py-3 text-right">Earnings</th>
-                  <th className="px-4 py-3 text-right">Transactions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {earnings.summary.bySource.map((source, index) => (
-                  <tr key={index} className="border-t border-gray-800">
-                    <td className="px-4 py-3">
-                      {source._id === 'video_view' ? 'Video Views' :
-                        source._id === 'livestream_view' ? 'Livestream Views' :
-                          source._id === 'ad_impression' ? 'Ad Impressions' :
-                            source._id === 'ad_click' ? 'Ad Clicks' :
-                              source._id === 'subscription' ? 'Subscriptions' :
-                                source._id}
-                    </td>
-                    <td className="px-4 py-3 text-right">{formatCurrency(source.creatorEarnings)}</td>
-                    <td className="px-4 py-3 text-right">{source.count}</td>
+            {/* Earnings by source */}
+            <h3 className="text-lg font-semibold mb-3">Earnings by Source</h3>
+            <div className="bg-gray-900 rounded-lg overflow-hidden mb-6">
+              <table className="w-full">
+                <thead>
+                  <tr className="bg-gray-800">
+                    <th className="px-4 py-3 text-left">Source</th>
+                    <th className="px-4 py-3 text-right">Earnings</th>
+                    <th className="px-4 py-3 text-right">Transactions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {earnings.summary.bySource.map((source, index) => (
+                    <tr key={index} className="border-t border-gray-800">
+                      <td className="px-4 py-3">
+                        {source._id === 'video_view' ? 'Video Views' :
+                          source._id === 'livestream_view' ? 'Livestream Views' :
+                            source._id === 'ad_impression' ? 'Ad Impressions' :
+                              source._id === 'ad_click' ? 'Ad Clicks' :
+                                source._id === 'subscription' ? 'Subscriptions' :
+                                  source._id}
+                      </td>
+                      <td className="px-4 py-3 text-right">{formatCurrency(source.creatorEarnings)}</td>
+                      <td className="px-4 py-3 text-right">{source.count}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Payout button */}
+            {earnings.pendingPayout >= earnings.settings.minimumPayoutAmount && (
+              <button
+                onClick={() => setShowWithdrawalModal(true)}
+                className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded"
+              >
+                Request Withdrawal ({formatCurrency(earnings.pendingPayout)})
+              </button>
+            )}
+
+            {earnings.pendingPayout < earnings.settings.minimumPayoutAmount && (
+              <p className="text-gray-400">
+                Minimum payout amount: {formatCurrency(earnings.settings.minimumPayoutAmount)}
+              </p>
+            )}
+
+            {/* Withdrawal History */}
+            <WithdrawalHistory />
           </div>
+        )}
 
-          {/* Payout button */}
-          {earnings.pendingPayout >= earnings.settings.minimumPayoutAmount && (
-            <button
-              onClick={() => setShowWithdrawalModal(true)}
-              className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded"
-            >
-              Request Withdrawal ({formatCurrency(earnings.pendingPayout)})
-            </button>
-          )}
-
-          {earnings.pendingPayout < earnings.settings.minimumPayoutAmount && (
-            <p className="text-gray-400">
-              Minimum payout amount: {formatCurrency(earnings.settings.minimumPayoutAmount)}
-            </p>
-          )}
-
-          {/* Withdrawal History */}
-          <WithdrawalHistory />
-        </div>
-      )}
+      {/* Message when monetization is approved but requirements not met */}
+      {monetizationStatus.status === 'approved' &&
+        (!monetizationStatus.requirements.subscribers.met ||
+          (!monetizationStatus.requirements.watchTime.met && !monetizationStatus.requirements.shortViews.met)) && (
+          <div className="bg-gray-800 rounded-lg p-6 mb-8">
+            <h2 className="text-xl font-bold mb-4">Earnings</h2>
+            <div className="p-4 bg-gray-900 rounded-lg">
+              <p className="text-lg mb-2">Your earnings will be displayed once you meet the following requirements:</p>
+              <ul className="list-disc pl-5 space-y-2">
+                {!monetizationStatus.requirements.subscribers.met && (
+                  <li>At least 1,000 subscribers (Current: {formatNumber(monetizationStatus.requirements.subscribers.current)})</li>
+                )}
+                {!monetizationStatus.requirements.watchTime.met && !monetizationStatus.requirements.shortViews.met && (
+                  <li>Either 4,000 hours of watch time (Current: {Math.floor(monetizationStatus.requirements.watchTime.current / 60)} hours) or 10M short views (Current: {formatNumber(monetizationStatus.requirements.shortViews.current)})</li>
+                )}
+              </ul>
+            </div>
+          </div>
+        )}
 
       {/* Withdrawal Modal */}
       <WithdrawalModal

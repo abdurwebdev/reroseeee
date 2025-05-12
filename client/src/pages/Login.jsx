@@ -24,7 +24,15 @@ const Login = () => {
         { withCredentials: true }
       );
       const user = res.data.user;
+
+      // Store user data in localStorage
       localStorage.setItem("user", JSON.stringify(user));
+
+      // Store token separately for API calls
+      if (user.token) {
+        localStorage.setItem("token", user.token);
+        console.log('Token stored in localStorage:', user.token);
+      }
 
       // Show success toast
       showSuccessToast(`Welcome back, ${user.name}!`);

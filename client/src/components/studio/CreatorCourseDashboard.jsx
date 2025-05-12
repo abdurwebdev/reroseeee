@@ -148,8 +148,18 @@ const CreatorCourseDashboard = () => {
           </div>
           <div>
             <p className="text-gray-400 text-sm">Total Earnings</p>
-            <p className="text-2xl font-bold">₹{stats.totalEarnings.toFixed(2)}</p>
-            <p className="text-xs text-green-400">₹{stats.pendingPayout.toFixed(2)} pending</p>
+            {user && user.subscriberCount >= 1000 &&
+              ((user.totalWatchTimeMinutes >= 240000) || (user.totalShortViews >= 10000000)) ? (
+              <>
+                <p className="text-2xl font-bold">₹{stats.totalEarnings.toFixed(2)}</p>
+                <p className="text-xs text-green-400">₹{stats.pendingPayout.toFixed(2)} pending</p>
+              </>
+            ) : (
+              <>
+                <p className="text-2xl font-bold">--</p>
+                <p className="text-xs text-yellow-400">Meet requirements to view earnings</p>
+              </>
+            )}
           </div>
         </div>
       </div>
@@ -198,70 +208,131 @@ const CreatorCourseDashboard = () => {
         <div className="bg-gray-900 rounded-lg p-6">
           <h2 className="text-2xl font-semibold mb-6">Earnings</h2>
 
-          <div className="bg-gray-800 rounded-lg p-4 mb-6">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-medium">Available for withdrawal</h3>
-              <button className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md">
-                Withdraw Funds
-              </button>
-            </div>
+          {user && user.subscriberCount >= 1000 &&
+            ((user.totalWatchTimeMinutes >= 240000) || (user.totalShortViews >= 10000000)) ? (
+            <>
+              <div className="bg-gray-800 rounded-lg p-4 mb-6">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-lg font-medium">Available for withdrawal</h3>
+                  <button className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md">
+                    Withdraw Funds
+                  </button>
+                </div>
 
-            <div className="flex items-baseline">
-              <span className="text-3xl font-bold">₹{stats.pendingPayout.toFixed(2)}</span>
-              <span className="text-gray-400 ml-2">available balance</span>
-            </div>
-          </div>
+                <div className="flex items-baseline">
+                  <span className="text-3xl font-bold">₹{stats.pendingPayout.toFixed(2)}</span>
+                  <span className="text-gray-400 ml-2">available balance</span>
+                </div>
+              </div>
 
-          <div className="bg-gray-800 rounded-lg p-4">
-            <h3 className="text-lg font-medium mb-4">Earnings History</h3>
+              <div className="bg-gray-800 rounded-lg p-4">
+                <h3 className="text-lg font-medium mb-4">Earnings History</h3>
 
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-700">
-                <thead>
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
-                      Course
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
-                      Date
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
-                      Amount
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
-                      Status
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-700">
-                  {stats.totalEarnings > 0 ? (
-                    <tr>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium">Sample Course</div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-400">{new Date().toLocaleDateString()}</div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm">₹{(stats.totalEarnings * 0.7).toFixed(2)}</div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-900 text-green-300">
-                          Paid
-                        </span>
-                      </td>
-                    </tr>
-                  ) : (
-                    <tr>
-                      <td colSpan="4" className="px-6 py-4 text-center text-gray-400">
-                        No earnings history yet
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-700">
+                    <thead>
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                          Course
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                          Date
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                          Amount
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                          Status
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-700">
+                      {stats.totalEarnings > 0 ? (
+                        <tr>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm font-medium">Sample Course</div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm text-gray-400">{new Date().toLocaleDateString()}</div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm">₹{(stats.totalEarnings * 0.7).toFixed(2)}</div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-900 text-green-300">
+                              Paid
+                            </span>
+                          </td>
+                        </tr>
+                      ) : (
+                        <tr>
+                          <td colSpan="4" className="px-6 py-4 text-center text-gray-400">
+                            No earnings history yet
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </>
+          ) : (
+            <div className="bg-gray-800 rounded-lg p-6">
+              <h3 className="text-xl font-semibold mb-4">Earnings Requirements</h3>
+              <p className="text-lg mb-4">Your earnings will be displayed once you meet the following requirements:</p>
+
+              <div className="space-y-4">
+                <div className="bg-gray-900 p-4 rounded-lg">
+                  <div className="flex justify-between mb-2">
+                    <span>Subscribers</span>
+                    <span className={user && user.subscriberCount >= 1000 ? "text-green-400" : "text-gray-400"}>
+                      {user ? user.subscriberCount || 0 : 0}/1,000
+                    </span>
+                  </div>
+                  <div className="w-full bg-gray-700 rounded-full h-2.5">
+                    <div
+                      className={`h-2.5 rounded-full ${user && user.subscriberCount >= 1000 ? "bg-green-600" : "bg-blue-600"}`}
+                      style={{ width: `${Math.min(100, ((user?.subscriberCount || 0) / 1000) * 100)}%` }}
+                    ></div>
+                  </div>
+                </div>
+
+                <div className="bg-gray-900 p-4 rounded-lg">
+                  <div className="flex justify-between mb-2">
+                    <span>Watch Hours</span>
+                    <span className={user && user.totalWatchTimeMinutes >= 240000 ? "text-green-400" : "text-gray-400"}>
+                      {user ? Math.floor((user.totalWatchTimeMinutes || 0) / 60) : 0}/4,000
+                    </span>
+                  </div>
+                  <div className="w-full bg-gray-700 rounded-full h-2.5">
+                    <div
+                      className={`h-2.5 rounded-full ${user && user.totalWatchTimeMinutes >= 240000 ? "bg-green-600" : "bg-blue-600"}`}
+                      style={{ width: `${Math.min(100, ((user?.totalWatchTimeMinutes || 0) / 240000) * 100)}%` }}
+                    ></div>
+                  </div>
+                </div>
+
+                <div className="bg-gray-900 p-4 rounded-lg">
+                  <div className="flex justify-between mb-2">
+                    <span>Short Views</span>
+                    <span className={user && user.totalShortViews >= 10000000 ? "text-green-400" : "text-gray-400"}>
+                      {user ? (user.totalShortViews || 0).toLocaleString() : 0}/10,000,000
+                    </span>
+                  </div>
+                  <div className="w-full bg-gray-700 rounded-full h-2.5">
+                    <div
+                      className={`h-2.5 rounded-full ${user && user.totalShortViews >= 10000000 ? "bg-green-600" : "bg-blue-600"}`}
+                      style={{ width: `${Math.min(100, ((user?.totalShortViews || 0) / 10000000) * 100)}%` }}
+                    ></div>
+                  </div>
+                </div>
+              </div>
+
+              <p className="text-gray-400 mt-4">
+                You need at least 1,000 subscribers and either 4,000 hours of watch time or 10 million short views to view your earnings.
+              </p>
             </div>
-          </div>
+          )}
         </div>
       )}
 
