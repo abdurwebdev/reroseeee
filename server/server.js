@@ -7,6 +7,11 @@ const http = require("http");
 const socketIo = require("socket.io");
 const passport = require("passport");
 
+// Load environment variables first
+dotenv.config();
+
+require("./config/passport"); // Import passport configuration
+
 const connectDB = require("./config/db");
 const Course = require("./models/Course");
 
@@ -30,7 +35,6 @@ const messageRoutes = require('./routes/messageRoutes');
 const creatorCourseRoutes = require('./routes/creatorCourseRoutes');
 const codingVideoRoutes = require('./routes/codingVideoRoutes');
 const coderVerificationRoutes = require('./routes/coderVerificationRoutes');
-dotenv.config();
 connectDB();
 
 const app = express();
@@ -49,7 +53,7 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(
   cors({
-    origin: ["http://localhost:5173","https://your-vercel-domain.vercel.app"],
+    origin: ["http://localhost:5173", "https://your-vercel-domain.vercel.app"],
     credentials: true,
   })
 );
