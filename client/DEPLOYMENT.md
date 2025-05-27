@@ -31,8 +31,11 @@
 ### Option 1: Automatic Deployment (Recommended)
 1. Push code to GitHub repository
 2. Connect repository to Vercel
-3. Set environment variables in Vercel dashboard
-4. Deploy automatically on push
+3. **Important**: Set Root Directory to `client` in Vercel settings
+4. Set environment variables in Vercel dashboard
+5. Deploy automatically on push
+
+**Note**: Vercel will auto-detect Vite framework and use proper build settings.
 
 ### Option 2: Manual Deployment
 ```bash
