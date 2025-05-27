@@ -5,6 +5,7 @@ import { toast } from 'react-toastify';
 import { FaThumbsUp, FaThumbsDown, FaCode, FaLink, FaGithub, FaBook, FaTools, FaExternalLinkAlt, FaRegClock, FaEye, FaCalendarAlt, FaChevronDown, FaChevronUp, FaShare, FaDownload, FaListAlt, FaRegBookmark, FaBookmark, FaFlag, FaRegComment, FaSortAmountDown, FaUserCircle } from 'react-icons/fa';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
+import getProfileImage from '../utils/getProfileImage';
 
 const CodingVideoWatch = () => {
   const { id } = useParams();
@@ -368,8 +369,30 @@ const CodingVideoWatch = () => {
   };
 
   // Handle download button click
-  const handleDownload = () => {
-    toast.info('Download feature coming soon!');
+  const handleDownloadAndSave = () => {
+    if (!video) return;
+    // Download the video file (trigger browser download)
+    const link = document.createElement('a');
+    link.href = video.videoUrl;
+    link.download = video.title ? `${video.title}.mp4` : 'coding-video.mp4';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    // Save metadata to localStorage for Downloads page
+    const downloads = JSON.parse(localStorage.getItem('downloads') || '[]');
+    // Avoid duplicates by id
+    if (!downloads.some(d => d.id === video._id)) {
+      downloads.push({
+        id: video._id,
+        title: video.title,
+        videoUrl: video.videoUrl,
+        channel: video.uploader || video.uploaderName || 'Unknown',
+        thumbnail: video.thumbnailUrl || '',
+        date: new Date().toISOString()
+      });
+      localStorage.setItem('downloads', JSON.stringify(downloads));
+    }
   };
 
   // Handle add to playlist button click
@@ -607,11 +630,11 @@ const CodingVideoWatch = () => {
                   </button>
 
                   <button
-                    className="flex items-center px-3 py-1 rounded-lg hover:bg-gray-800"
-                    onClick={handleDownload}
+                    onClick={handleDownloadAndSave}
+                    className="flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors"
                   >
-                    <FaDownload className="mr-1" />
-                    <span>Download</span>
+                    <FaDownload className="mr-2" />
+                    Download Video
                   </button>
 
                   <button
@@ -858,11 +881,12 @@ const CodingVideoWatch = () => {
                                 .map((comment, index) => (
                                   <div key={index} className="flex gap-3">
                                     <div className="flex-shrink-0">
-                                      {comment.userProfileImage ? (
+                                      {getProfileImage(comment, comment.username) ? (
                                         <img
-                                          src={comment.userProfileImage}
+                                          src={getProfileImage(comment, comment.username)}
                                           alt={comment.username}
                                           className="w-10 h-10 rounded-full"
+                                          onError={e => e.target.src = "/default-avatar.png"}
                                         />
                                       ) : (
                                         <FaUserCircle className="w-10 h-10 text-gray-600" />
@@ -897,11 +921,12 @@ const CodingVideoWatch = () => {
                                           {comment.replies.map((reply, replyIndex) => (
                                             <div key={replyIndex} className="flex gap-3">
                                               <div className="flex-shrink-0">
-                                                {reply.userProfileImage ? (
+                                                {getProfileImage(reply, reply.username) ? (
                                                   <img
-                                                    src={reply.userProfileImage}
+                                                    src={getProfileImage(reply, reply.username)}
                                                     alt={reply.username}
                                                     className="w-8 h-8 rounded-full"
+                                                    onError={e => e.target.src = "/default-avatar.png"}
                                                   />
                                                 ) : (
                                                   <FaUserCircle className="w-8 h-8 text-gray-600" />

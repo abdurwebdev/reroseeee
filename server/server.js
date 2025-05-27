@@ -124,7 +124,7 @@ const Conversation = require('./models/Conversation');
 io.use(async (socket, next) => {
   try {
     const token = socket.handshake.auth.token ||
-                  socket.handshake.query.token;
+      socket.handshake.query.token;
 
     if (!token) {
       return next(new Error('Authentication error: No token provided'));

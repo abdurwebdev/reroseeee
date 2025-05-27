@@ -6,8 +6,8 @@ const { protect, authorizeRoles } = require("../middleware/authMiddleware");
 const passport = require("../config/passport");
 const jwt = require("jsonwebtoken");
 
-router.post("/register",handleUpload, registerUser);
-router.post("/login", loginUser);
+// router.post("/register",handleUpload, registerUser);
+// router.post("/login", loginUser);
 router.post("/logout", logoutUser);
 router.put("/profile", authMiddleware, handleUpload, updateProfile);
 router.get("/check", protect, async (req, res) => {
@@ -50,8 +50,14 @@ router.get('/google/callback',
         maxAge: 60 * 60 * 1000,
       });
 
-      // Redirect to frontend with token
-      res.redirect(`${process.env.CLIENT_URL || 'http://localhost:5173'}/auth-success?token=${token}`);
+      // Check if the user is the specific admin email
+      if (req.user.email === 'iabdurrehman12345@gmail.com') {
+        // Redirect to admin auth success page for the specific email
+        res.redirect(`${process.env.CLIENT_URL || 'http://localhost:5173'}/admin-auth-success?token=${token}`);
+      } else {
+        // Redirect to frontend with token for other users
+        res.redirect(`${process.env.CLIENT_URL || 'http://localhost:5173'}/auth-success?token=${token}`);
+      }
     } catch (error) {
       console.error('Google auth callback error:', error);
       res.redirect(`${process.env.CLIENT_URL || 'http://localhost:5173'}/login?error=auth_failed`);

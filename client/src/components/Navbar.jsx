@@ -145,6 +145,15 @@ export default function Navbar() {
 
   // We're now using date-fns in the NotificationItem component
 
+  // Replace all instances of user.profileImageUrl usage with a helper function for consistency
+  const getProfileImage = (profileImageUrl, name) => {
+    if (profileImageUrl) {
+      return `${API_URL}${profileImageUrl}`;
+    }
+    // fallback to default avatar image or initial
+    return null;
+  };
+
   return (
     <>
       {/* Navbar */}
@@ -164,6 +173,7 @@ export default function Navbar() {
             <Link to="/messages" onClick={closeMenu} className="hover:text-gray-400 flex items-center">
               <FaEnvelope className="mr-2" /> Messages
             </Link>
+            <Link to="/downloads" onClick={closeMenu} className="hover:text-gray-400">Downloads</Link>
             <button onClick={() => { setShowPopup(true); closeMenu(); }} className="hover:text-gray-400">
               Request Callback
             </button>
@@ -172,9 +182,9 @@ export default function Navbar() {
               <span className="text-gray-400">Checking...</span>
             ) : user ? (
               <div className="flex flex-col items-center">
-                {user.profileImageUrl ? (
+                {getProfileImage(user.profileImageUrl, user.name) ? (
                   <img
-                    src={`${API_URL}${user.profileImageUrl}`}
+                    src={getProfileImage(user.profileImageUrl, user.name)}
                     alt={user.name}
                     className="w-12 h-12 rounded-full mb-2 object-cover"
                     onError={(e) => e.target.src = "/default-avatar.png"}
@@ -276,6 +286,7 @@ export default function Navbar() {
           <Link to="/messages" className="hover:text-gray-400 flex items-center">
             <FaEnvelope className="mr-2" /> Messages
           </Link>
+          <Link to="/downloads" className="hover:text-gray-400">Downloads</Link>
           <button onClick={() => setShowPopup(true)} className="hover:text-gray-400">Request Callback</button>
         </div>
 
@@ -295,9 +306,9 @@ export default function Navbar() {
                   className="flex items-center"
                   aria-label="User profile"
                 >
-                  {user.profileImageUrl ? (
+                  {getProfileImage(user.profileImageUrl, user.name) ? (
                     <img
-                      src={`${API_URL}${user.profileImageUrl}`}
+                      src={getProfileImage(user.profileImageUrl, user.name)}
                       alt={user.name}
                       className="w-10 h-10 rounded-full object-cover border-2 border-gray-700"
                       onError={(e) => e.target.src = "/default-avatar.png"}
@@ -314,9 +325,9 @@ export default function Navbar() {
                   <div className="absolute right-0 mt-2 w-64 bg-[#212121] rounded-lg shadow-lg overflow-hidden z-50">
                     <div className="p-4 border-b border-gray-700">
                       <div className="flex items-center">
-                        {user.profileImageUrl ? (
+                        {getProfileImage(user.profileImageUrl, user.name) ? (
                           <img
-                            src={`${API_URL}${user.profileImageUrl}`}
+                            src={getProfileImage(user.profileImageUrl, user.name)}
                             alt={user.name}
                             className="w-12 h-12 rounded-full object-cover mr-3"
                             onError={(e) => e.target.src = "/default-avatar.png"}

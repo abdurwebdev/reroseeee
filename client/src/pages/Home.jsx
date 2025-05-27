@@ -38,7 +38,7 @@ export default function Home() {
               >
                 {course.image && (
                   <img
-                  src={course.image.startsWith('http') ? course.image : `http://localhost:5000${course.image}`}
+                    src={course.image.startsWith('http') ? course.image : `http://localhost:5000${course.image}`}
                     alt={course.title}
                     className="w-full h-40 object-cover rounded-lg mb-3"
                   />

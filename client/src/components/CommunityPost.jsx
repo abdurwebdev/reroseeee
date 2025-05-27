@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { FaThumbsUp, FaRegThumbsUp, FaComment, FaEllipsisV, FaTrash } from 'react-icons/fa';
 import axios from 'axios';
 import { showSuccessToast, showErrorToast } from '../utils/toast';
+import getProfileImage from '../utils/getProfileImage';
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
@@ -12,7 +13,7 @@ const formatDate = (dateString) => {
   const now = new Date();
   const diffTime = Math.abs(now - date);
   const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-  
+
   if (diffDays === 0) {
     const diffHours = Math.floor(diffTime / (1000 * 60 * 60));
     if (diffHours === 0) {
@@ -48,16 +49,16 @@ const CommunityPost = ({ post, currentUser, onDelete }) => {
   // Toggle like
   const handleLike = async () => {
     if (!currentUser) return;
-    
+
     try {
       setLoading(true);
-      
+
       const response = await axios.post(
         `${API_URL}/api/channels/community/post/${post._id}/like`,
         {},
         { withCredentials: true }
       );
-      
+
       if (response.data.success) {
         setIsLiked(!isLiked);
         setLikeCount(response.data.likes);
@@ -74,16 +75,16 @@ const CommunityPost = ({ post, currentUser, onDelete }) => {
   const handleAddComment = async (e) => {
     e.preventDefault();
     if (!commentText.trim() || !currentUser) return;
-    
+
     try {
       setLoading(true);
-      
+
       const response = await axios.post(
         `${API_URL}/api/channels/community/post/${post._id}/comment`,
         { text: commentText },
         { withCredentials: true }
       );
-      
+
       if (response.data.success) {
         showSuccessToast('Comment added');
         setCommentText('');
@@ -100,15 +101,15 @@ const CommunityPost = ({ post, currentUser, onDelete }) => {
   // Delete post
   const handleDelete = async () => {
     if (!isOwner) return;
-    
+
     try {
       setLoading(true);
-      
+
       const response = await axios.delete(
         `${API_URL}/api/channels/community/post/${post._id}`,
         { withCredentials: true }
       );
-      
+
       if (response.data.success) {
         showSuccessToast('Post deleted');
         if (onDelete) onDelete(post._id);
@@ -129,9 +130,9 @@ const CommunityPost = ({ post, currentUser, onDelete }) => {
           <Link to={`/channel/${post.userId._id}`} className="flex items-center">
             <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-700 mr-3">
               {post.userId.profileImageUrl ? (
-                <img 
-                  src={`${API_URL}${post.userId.profileImageUrl}`} 
-                  alt={post.userId.name} 
+                <img
+                  src={`${API_URL}${post.userId.profileImageUrl}`}
+                  alt={post.userId.name}
                   className="w-full h-full object-cover"
                 />
               ) : (
@@ -146,16 +147,16 @@ const CommunityPost = ({ post, currentUser, onDelete }) => {
             </div>
           </Link>
         </div>
-        
+
         {isOwner && (
           <div className="relative">
-            <button 
+            <button
               onClick={() => setShowMenu(!showMenu)}
               className="text-gray-400 hover:text-white p-1"
             >
               <FaEllipsisV />
             </button>
-            
+
             {showMenu && (
               <div className="absolute right-0 mt-1 w-32 bg-gray-800 rounded-md shadow-lg z-10">
                 <button
@@ -171,22 +172,22 @@ const CommunityPost = ({ post, currentUser, onDelete }) => {
           </div>
         )}
       </div>
-      
+
       {/* Post content */}
       <div className="mb-4">
         <p className="text-gray-200 whitespace-pre-line">{post.text}</p>
-        
+
         {post.imageUrl && (
           <div className="mt-3 rounded-lg overflow-hidden">
-            <img 
-              src={`${API_URL}${post.imageUrl}`} 
-              alt="Post" 
+            <img
+              src={`${API_URL}${post.imageUrl}`}
+              alt="Post"
               className="w-full max-h-96 object-contain"
             />
           </div>
         )}
       </div>
-      
+
       {/* Post actions */}
       <div className="flex items-center space-x-4 border-t border-gray-800 pt-3">
         <button
@@ -197,7 +198,7 @@ const CommunityPost = ({ post, currentUser, onDelete }) => {
           {isLiked ? <FaThumbsUp /> : <FaRegThumbsUp />}
           <span>{likeCount}</span>
         </button>
-        
+
         <button
           onClick={() => setShowComments(!showComments)}
           className="flex items-center space-x-1 text-gray-400 hover:text-white"
@@ -206,7 +207,7 @@ const CommunityPost = ({ post, currentUser, onDelete }) => {
           <span>{post.comments.length}</span>
         </button>
       </div>
-      
+
       {/* Comments section */}
       {showComments && (
         <div className="mt-4 border-t border-gray-800 pt-4">
@@ -229,17 +230,25 @@ const CommunityPost = ({ post, currentUser, onDelete }) => {
               </button>
             </form>
           )}
-          
+
           {/* Comments list */}
           <div className="space-y-4">
             {post.comments.length > 0 ? (
               post.comments.map((comment) => (
                 <div key={comment._id} className="flex space-x-3">
                   <div className="w-8 h-8 rounded-full overflow-hidden bg-gray-700 flex-shrink-0">
-                    {/* Would need to populate user profile image here */}
-                    <div className="w-full h-full flex items-center justify-center text-gray-400">
-                      {comment.username.charAt(0).toUpperCase()}
-                    </div>
+                    {getProfileImage(comment, comment.username) ? (
+                      <img
+                        src={getProfileImage(comment, comment.username)}
+                        alt={comment.username}
+                        className="w-full h-full object-cover"
+                        onError={e => e.target.src = "/default-avatar.png"}
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-gray-400">
+                        {comment.username.charAt(0).toUpperCase()}
+                      </div>
+                    )}
                   </div>
                   <div>
                     <div className="flex items-center space-x-2">

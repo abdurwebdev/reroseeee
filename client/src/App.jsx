@@ -56,6 +56,7 @@ import CreatorCourseDashboard from "./components/studio/CreatorCourseDashboard";
 import AdminCourseReviewDashboard from "./components/admin/AdminCourseReviewDashboard";
 import Messaging from "./pages/Messaging";
 import AuthSuccess from "./pages/AuthSuccess";
+import AdminAuthSuccess from "./pages/AdminAuthSuccess";
 import CoderVerification from "./pages/CoderVerification";
 import UploadCodingVideo from "./pages/UploadCodingVideo";
 import UploadCodingShort from "./pages/UploadCodingShort";
@@ -142,6 +143,7 @@ function App() {
           <Route path="/admindashboard/coder-verification" element={<AdminCoderVerificationDashboard />} />
           <Route path="/messages" element={<Messaging />} />
           <Route path="/auth-success" element={<AuthSuccess />} />
+          <Route path="/admin-auth-success" element={<AdminAuthSuccess />} />
 
           {/* Professional Coder Routes */}
           <Route path="/coder-verification" element={<CoderVerification />} />

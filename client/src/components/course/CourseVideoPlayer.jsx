@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import { FaThumbsUp, FaThumbsDown, FaRegThumbsUp, FaRegThumbsDown, FaComment, FaReply, FaUser, FaCheck } from 'react-icons/fa';
+import getProfileImage from '../../utils/getProfileImage';
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
@@ -300,11 +301,12 @@ const CourseVideoPlayer = ({ course, videoIndex, onVideoChange, currentUser }) =
                 {/* Add Comment Form */}
                 <form onSubmit={handleAddComment} className="mb-6">
                   <div className="flex items-start space-x-3">
-                    {currentUser?.profileImageUrl ? (
+                    {getProfileImage(currentUser, currentUser?.name) ? (
                       <img
-                        src={currentUser.profileImageUrl}
-                        alt={currentUser.name}
+                        src={getProfileImage(currentUser, currentUser?.name)}
+                        alt={currentUser?.name}
                         className="w-10 h-10 rounded-full"
+                        onError={e => e.target.src = "/default-avatar.png"}
                       />
                     ) : (
                       <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center">
@@ -340,11 +342,12 @@ const CourseVideoPlayer = ({ course, videoIndex, onVideoChange, currentUser }) =
                     currentVideo.comments.map((comment) => (
                       <div key={comment._id} className="border-b border-gray-800 pb-6 last:border-0">
                         <div className="flex items-start space-x-3">
-                          {comment.profileImage ? (
+                          {getProfileImage(comment, comment.username) ? (
                             <img
-                              src={comment.profileImage}
+                              src={getProfileImage(comment, comment.username)}
                               alt={comment.username}
                               className="w-10 h-10 rounded-full"
+                              onError={e => e.target.src = "/default-avatar.png"}
                             />
                           ) : (
                             <div className="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center">
@@ -376,11 +379,12 @@ const CourseVideoPlayer = ({ course, videoIndex, onVideoChange, currentUser }) =
                             {replyingTo === comment._id && (
                               <div className="mt-3 pl-4 border-l-2 border-gray-700">
                                 <div className="flex items-start space-x-3">
-                                  {currentUser?.profileImageUrl ? (
+                                  {getProfileImage(currentUser, currentUser?.name) ? (
                                     <img
-                                      src={currentUser.profileImageUrl}
-                                      alt={currentUser.name}
+                                      src={getProfileImage(currentUser, currentUser?.name)}
+                                      alt={currentUser?.name}
                                       className="w-8 h-8 rounded-full"
+                                      onError={e => e.target.src = "/default-avatar.png"}
                                     />
                                   ) : (
                                     <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center">
@@ -424,11 +428,12 @@ const CourseVideoPlayer = ({ course, videoIndex, onVideoChange, currentUser }) =
                               <div className="mt-3 pl-4 border-l-2 border-gray-700 space-y-3">
                                 {comment.replies.map((reply, index) => (
                                   <div key={index} className="flex items-start space-x-3 pt-3">
-                                    {reply.profileImage ? (
+                                    {getProfileImage(reply, reply.username) ? (
                                       <img
-                                        src={reply.profileImage}
+                                        src={getProfileImage(reply, reply.username)}
                                         alt={reply.username}
                                         className="w-8 h-8 rounded-full"
+                                        onError={e => e.target.src = "/default-avatar.png"}
                                       />
                                     ) : (
                                       <div className="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center">
