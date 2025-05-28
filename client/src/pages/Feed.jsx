@@ -76,7 +76,8 @@ const Feed = () => {
 
     const fetchVideos = async () => {
       try {
-        const res = await axios.get("http://localhost:5000/api/free-videos/feed", {
+        const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+        const res = await axios.get(`${API_URL}/api/free-videos/feed`, {
           withCredentials: true,
         });
         const allVideos = res.data;
@@ -104,11 +105,12 @@ const Feed = () => {
     // Fetch active livestreams
     const fetchLivestreams = async () => {
       try {
-        const res = await axios.get("http://localhost:5000/api/livestream/active");
+        const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+        const res = await axios.get(`${API_URL}/api/livestream/active`);
         setActiveLivestreams(res.data.data || []);
 
         // Also fetch ended livestreams
-        const endedRes = await axios.get("http://localhost:5000/api/livestream/ended");
+        const endedRes = await axios.get(`${API_URL}/api/livestream/ended`);
         setEndedLivestreams(endedRes.data.data || []);
       } catch (err) {
         console.error("Failed to fetch livestreams:", err);
@@ -179,7 +181,8 @@ const Feed = () => {
       try {
         const token = localStorage.getItem('token');
 
-        const response = await axios.get('http://localhost:5000/api/coding-videos/trending?limit=8', {
+        const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+        const response = await axios.get(`${API_URL}/api/coding-videos/trending?limit=8`, {
           withCredentials: true,
           headers: {
             'Authorization': token ? `Bearer ${token}` : '',
@@ -201,7 +204,8 @@ const Feed = () => {
       try {
         const token = localStorage.getItem('token');
 
-        const response = await axios.get('http://localhost:5000/api/coding-videos/feed?limit=12', {
+        const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+        const response = await axios.get(`${API_URL}/api/coding-videos/feed?limit=12`, {
           withCredentials: true,
           headers: {
             'Authorization': token ? `Bearer ${token}` : '',

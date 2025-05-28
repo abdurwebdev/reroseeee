@@ -5,7 +5,7 @@ import Navbar from '../components/Navbar';
 import FeedSidebar from '../components/FeedSidebar';
 import { FaFire, FaSearch } from 'react-icons/fa';
 
-const API_URL = "http://localhost:5000";
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 const Trending = () => {
   const [trendingVideos, setTrendingVideos] = useState([]);
@@ -20,7 +20,7 @@ const Trending = () => {
   useEffect(() => {
     const storedUser = JSON.parse(localStorage.getItem("user"));
     setUser(storedUser);
-    
+
     // Fetch trending videos
     const fetchTrendingVideos = async () => {
       try {
@@ -34,16 +34,16 @@ const Trending = () => {
         setLoading(false);
       }
     };
-    
+
     // Fetch user subscriptions if logged in
     const fetchSubscriptions = async () => {
       if (!storedUser) return;
-      
+
       try {
         const res = await axios.get(`${API_URL}/api/subscriptions/my-subscriptions`, {
           withCredentials: true,
         });
-        
+
         if (res.data.success) {
           setSubscriptions(res.data.subscriptions || []);
         }
@@ -51,11 +51,11 @@ const Trending = () => {
         console.error("Failed to fetch subscriptions:", err);
       }
     };
-    
+
     fetchTrendingVideos();
     fetchSubscriptions();
   }, []);
-  
+
   // Format date
   const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -75,24 +75,24 @@ const Trending = () => {
     if (diffMin > 0) return `${diffMin} minute${diffMin > 1 ? 's' : ''} ago`;
     return `${diffSec} second${diffSec !== 1 ? 's' : ''} ago`;
   };
-  
+
   // Filter videos based on search term and type
   const filteredVideos = trendingVideos.filter(video => {
     const matchesSearch = video.title.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesType = filterType === 'all' || video.type === filterType;
     return matchesSearch && matchesType;
   });
-  
+
   return (
     <div className="min-h-screen bg-[#000000] text-white">
       <Navbar />
-      
+
       <div className="flex flex-col md:flex-row">
         {/* Sidebar - hidden on mobile, shown on larger screens */}
         <div className="hidden md:block md:w-64 lg:w-72 h-[calc(100vh-64px)] sticky top-16 overflow-y-auto">
           <FeedSidebar user={user} subscriptions={subscriptions} />
         </div>
-        
+
         {/* Main content */}
         <div className="flex-1 p-4">
           <div className="max-w-6xl mx-auto">
@@ -100,7 +100,7 @@ const Trending = () => {
               <FaFire className="text-red-500 text-2xl mr-2" />
               <h1 className="text-2xl font-bold">Trending</h1>
             </div>
-            
+
             {/* Search and filters */}
             <div className="flex flex-col md:flex-row gap-4 mb-6">
               <div className="relative flex-1">
@@ -113,21 +113,21 @@ const Trending = () => {
                 />
                 <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" />
               </div>
-              
+
               <div className="flex gap-2">
-                <button 
+                <button
                   onClick={() => setFilterType('all')}
                   className={`px-4 py-2 rounded-full ${filterType === 'all' ? 'bg-red-600' : 'bg-gray-800'}`}
                 >
                   All
                 </button>
-                <button 
+                <button
                   onClick={() => setFilterType('video')}
                   className={`px-4 py-2 rounded-full ${filterType === 'video' ? 'bg-red-600' : 'bg-gray-800'}`}
                 >
                   Videos
                 </button>
-                <button 
+                <button
                   onClick={() => setFilterType('short')}
                   className={`px-4 py-2 rounded-full ${filterType === 'short' ? 'bg-red-600' : 'bg-gray-800'}`}
                 >
@@ -135,7 +135,7 @@ const Trending = () => {
                 </button>
               </div>
             </div>
-            
+
             {loading ? (
               <div className="text-center py-10">
                 <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-white mx-auto"></div>
@@ -158,23 +158,23 @@ const Trending = () => {
                 {/* Display videos in a list format with rank numbers */}
                 <div className="space-y-4">
                   {filteredVideos.map((video, index) => (
-                    <Link 
-                      to={`/watch/${video._id}`} 
+                    <Link
+                      to={`/watch/${video._id}`}
                       key={video._id}
                       className="flex bg-[#111111] rounded-lg overflow-hidden hover:bg-gray-800 transition-colors"
                     >
                       <div className="w-12 flex-shrink-0 bg-gray-800 flex items-center justify-center text-2xl font-bold">
                         {index + 1}
                       </div>
-                      
+
                       <div className="w-64 h-36 flex-shrink-0">
-                        <img 
-                          src={video.thumbnailUrl} 
-                          alt={video.title} 
+                        <img
+                          src={video.thumbnailUrl}
+                          alt={video.title}
                           className="w-full h-full object-cover"
                         />
                       </div>
-                      
+
                       <div className="p-4 flex-1">
                         <h3 className="font-medium text-lg">{video.title}</h3>
                         <div className="flex items-center text-sm text-gray-400 mt-1">

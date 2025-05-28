@@ -41,7 +41,11 @@ const app = express();
 const server = http.createServer(app);
 const io = socketIo(server, {
   cors: {
-    origin: "http://localhost:5173",
+    origin: [
+      "http://localhost:5173",
+      "https://rerosesssss-b61w.vercel.app",
+      "https://rerosesssss-77mr.vercel.app"
+    ],
     methods: ["GET", "POST"],
     credentials: true
   }
@@ -53,7 +57,11 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(
   cors({
-    origin: ["http://localhost:5173", "https://your-vercel-domain.vercel.app"],
+    origin: [
+      "http://localhost:5173",
+      "https://rerosesssss-b61w.vercel.app",
+      "https://rerosesssss-77mr.vercel.app"
+    ],
     credentials: true,
   })
 );

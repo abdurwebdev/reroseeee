@@ -24,7 +24,8 @@ export const SocketProvider = ({ children }) => {
     }
 
     // Initialize socket connection
-    const socketInstance = io('http://localhost:5000', {
+    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+    const socketInstance = io(API_URL, {
       auth: { token },
       query: { token },
       transports: ['websocket'],
